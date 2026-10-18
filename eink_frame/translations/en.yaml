@@ -1,0 +1,29 @@
+configuration:
+  frame_token:
+    name: Frame token
+    description: Shared secret the ESP32 sends with each request. Put the same value in the firmware's config.h.
+  interval_minutes:
+    name: Change picture every (minutes)
+    description: How long the frame sleeps between check-ins outside quiet hours.
+  quiet_start:
+    name: Quiet hours start
+    description: The frame does not change pictures between these times (24-hour HH:MM).
+  quiet_end:
+    name: Quiet hours end
+  orientation:
+    name: Orientation
+    description: How the frame hangs. Changing this re-renders every picture.
+  flip:
+    name: Upside down
+    description: Turn on if pictures appear upside down.
+  saturation:
+    name: Colour boost
+    description: 0 dithers against the panel's real (muted) inks, 1 against pure colours. 0.5 is a good start.
+  shuffle:
+    name: Shuffle
+    description: Show pictures in random order instead of the gallery order.
+  low_battery_percent:
+    name: Low battery warning (%)
+    description: Create a Home Assistant notification when the frame reports this level or lower.
+network:
+  8200/tcp: Frame API port

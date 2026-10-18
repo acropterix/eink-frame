@@ -1,0 +1,5 @@
+# Lets Home Assistant install the add-on straight from a Git repository:
+# Settings > Add-ons > Add-on Store > ⋮ > Repositories > add the repository URL.
+name: E-Ink Frame add-ons
+url: https://github.com/acropterix/eink-frame
+maintainer: E-Ink Frame

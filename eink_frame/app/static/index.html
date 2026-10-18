@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>E-Ink Frame</title>
+  <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>E-Ink Frame</h1>
+    <div id="status" class="status">Loading…</div>
+  </header>
+
+  <div id="config-banner" class="config-banner" role="alert" hidden>
+    <strong>⚠️ Frame config mode is ON</strong>
+    <span id="config-text"></span>
+  </div>
+
+  <main>
+    <section class="card">
+      <h2>Add pictures</h2>
+      <form id="upload-form">
+        <label class="drop" id="drop">
+          <input type="file" id="files" name="files" accept="image/*" multiple>
+          <span id="drop-text">Choose photos or drawings (or drop them here)</span>
+        </label>
+        <div class="row">
+          <label>Type
+            <select name="mode" id="mode">
+              <option value="photo">Photo (smooth dithering)</option>
+              <option value="drawing">Drawing (crisp colours)</option>
+            </select>
+          </label>
+          <label>Framing
+            <select name="fit" id="fit">
+              <option value="crop">Fill the frame (crop edges)</option>
+              <option value="contain">Show everything (white border)</option>
+            </select>
+          </label>
+          <button type="submit" id="upload-btn">Upload</button>
+        </div>
+        <p id="upload-msg" class="msg"></p>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Draw something</h2>
+      <p class="hint">These are the six colours the frame can show.</p>
+      <div class="toolbar">
+        <div id="swatches" class="swatches"></div>
+        <label>Brush <input type="range" id="brush" min="4" max="60" value="14"></label>
+        <button type="button" id="undo">Undo</button>
+        <button type="button" id="clear">Clear</button>
+        <button type="button" id="save-drawing" class="primary">Save to frame</button>
+      </div>
+      <canvas id="pad" width="1600" height="1200"></canvas>
+      <p id="draw-msg" class="msg"></p>
+    </section>
+
+    <section class="card">
+      <div class="gallery-head">
+        <h2>Pictures</h2>
+        <label class="switch"><input type="checkbox" id="paused"> Pause slideshow</label>
+      </div>
+      <p class="hint">"Show next" puts a picture on the frame at its next check-in. A date (MM-DD) shows it all day every year, like a birthday.</p>
+      <div id="gallery" class="gallery"></div>
+    </section>
+    <section class="card">
+      <h2>Frame settings</h2>
+      <p class="hint">Change the frame's network settings without opening it. Fill in only what you want to change.
+        The frame picks them up at its next check-in and tries them on the following wake. If it can't connect,
+        it goes back to its previous settings and reports the problem here.</p>
+      <form id="frame-settings">
+        <div class="grid">
+          <label>Server address <input name="server_host" placeholder="no change"></label>
+          <label>Server port <input name="server_port" type="number" min="1" max="65535" placeholder="no change"></label>
+          <label>Wi-Fi network <input name="wifi_ssid" placeholder="no change" maxlength="32"></label>
+          <label>Wi-Fi password <input name="wifi_password" type="password" placeholder="needed with a new network" autocomplete="new-password"></label>
+          <label>Backup Wi-Fi network <input name="wifi_ssid2" placeholder="no change" maxlength="32"></label>
+          <label>Backup Wi-Fi password <input name="wifi_password2" type="password" placeholder="needed with a new network" autocomplete="new-password"></label>
+          <label>Fixed IP
+            <select name="use_static_ip">
+              <option value="">No change</option>
+              <option value="1">Use a fixed IP</option>
+              <option value="0">Use DHCP</option>
+            </select>
+          </label>
+          <label>IP address <input name="static_ip" placeholder="no change"></label>
+          <label>Gateway <input name="gateway" placeholder="no change"></label>
+          <label>Subnet mask <input name="subnet" placeholder="no change"></label>
+          <label>DNS <input name="dns" placeholder="no change"></label>
+          <label class="inline"><input type="checkbox" name="remove_backup"> Remove the backup network</label>
+        </div>
+        <div class="row"><button type="submit">Send to frame</button></div>
+        <p id="settings-msg" class="msg"></p>
+      </form>
+      <p id="frame-cfg-state" class="hint"></p>
+      <table class="history" id="history"></table>
+    </section>
+
+    <section class="card">
+      <h2>Frame firmware</h2>
+      <p class="hint">Upload <b>eink_frame.ino.bin</b> from Arduino's Sketch → Export Compiled Binary. The frame installs it
+        at its next check-in if its battery is above 3.7 V (or it has no battery reading), then restarts.</p>
+      <p id="fw-state"></p>
+      <form id="fw-form" class="row">
+        <input type="file" id="fw-file" accept=".bin">
+        <button type="submit">Upload firmware</button>
+        <button type="button" id="fw-delete" class="danger" hidden>Remove uploaded firmware</button>
+      </form>
+      <p id="fw-msg" class="msg"></p>
+    </section>
+  </main>
+
+  <template id="tile">
+    <figure class="tile">
+      <img alt="" loading="lazy">
+      <figcaption>
+        <input class="name" aria-label="Name">
+        <div class="tile-row">
+          <label><input type="checkbox" class="enabled"> In slideshow</label>
+          <input class="show-on" placeholder="MM-DD" maxlength="5" aria-label="Special date">
+        </div>
+        <div class="tile-row">
+          <button type="button" class="next">Show next</button>
+          <a class="button download" download>.bin</a>
+          <button type="button" class="up" title="Move earlier">↑</button>
+          <button type="button" class="down" title="Move later">↓</button>
+          <button type="button" class="delete danger">Delete</button>
+        </div>
+      </figcaption>
+    </figure>
+  </template>
+
+  <script src="static/app.js"></script>
+</body>
+</html>

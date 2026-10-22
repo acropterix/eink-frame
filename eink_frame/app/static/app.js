@@ -58,7 +58,9 @@ function renderStatus(state, options) {
     ? `${state.battery_percent}% (${(state.battery_mv / 1000).toFixed(2)} V)` : "unknown";
   $("#status").textContent =
     `Last check-in ${ago(state.last_seen_iso)} · Battery ${battery} · Next wake ${timeOf(state.next_wake_iso)}` +
-    ` · Every ${options.interval_minutes} min, quiet ${options.quiet_start}–${options.quiet_end}`;
+    ` · Every ${options.interval_minutes} min, quiet ${options.quiet_start}–${options.quiet_end}` +
+    (state.refresh_s ? ` · Last panel refresh ${state.refresh_s} s` : "") +
+    (state.frame_error ? ` · ⚠️ Frame problem: ${state.frame_error}` : "");
   $("#paused").checked = !!state.paused;
 }
 

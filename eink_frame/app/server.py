@@ -322,6 +322,19 @@ def record_frame_report(state, query):
     for src, dst in (("cfg_err", "cfg_error"), ("fw_fail", "fw_failed"), ("fw_err", "fw_error")):
         if src in query:
             state[dst] = query[src][:120]
+    # Problems the frame hit since its last check-in (the panel itself just
+    # keeps showing the old picture, so this is the only way to see them).
+    if query.get("fw"):
+        error = (query.get("err") or "")[:160] or None
+        if error and error != state.get("frame_error"):
+            state["frame_error_iso"] = datetime.now().astimezone().isoformat(timespec="seconds")
+            log.warning("Frame reported a problem: %s", error)
+        state["frame_error"] = error
+    if query.get("refresh_ms"):
+        try:
+            state["refresh_s"] = round(int(query["refresh_ms"]) / 1000, 1)
+        except ValueError:
+            pass
 
 
 # ---------------------------------------------------------------- HA bridge
@@ -340,6 +353,12 @@ async def push_states(app, state, image_name):
             {"device_class": "timestamp", "friendly_name": "E-Ink Frame last check-in",
              "wifi_rssi": state.get("rssi"), "firmware": state.get("fw"),
              "next_wake": state.get("next_wake_iso")}),
+        "sensor.eink_frame_status": (
+            "problem" if state.get("frame_error") else "ok",
+            {"friendly_name": "E-Ink Frame status",
+             "icon": "mdi:alert-circle" if state.get("frame_error") else "mdi:check-circle",
+             "last_problem": state.get("frame_error"), "problem_since": state.get("frame_error_iso"),
+             "last_refresh_seconds": state.get("refresh_s"), "last_wake_reason": state.get("last_reason")}),
         "sensor.eink_frame_image": (
             image_name or "unknown",
             {"friendly_name": "E-Ink Frame image", "icon": "mdi:image-frame",
@@ -359,6 +378,19 @@ async def push_states(app, state, image_name):
             state["low_battery_notified"] = True
         elif pct is not None and pct > threshold + 10:
             state["low_battery_notified"] = False
+        error = state.get("frame_error")
+        if error and state.get("error_notified") != error:
+            await session.post(
+                f"{HA_API}/services/persistent_notification/create", headers=headers,
+                json={"notification_id": "eink_frame_problem", "title": "E-Ink Frame problem",
+                      "message": f"{error}\n\nThe panel keeps showing the old picture until this is fixed. "
+                                 "See DEBUGGING.md."})
+            state["error_notified"] = error
+        elif not error and state.get("error_notified"):
+            await session.post(
+                f"{HA_API}/services/persistent_notification/dismiss", headers=headers,
+                json={"notification_id": "eink_frame_problem"})
+            state["error_notified"] = None
     except Exception:  # noqa: BLE001 - HA being unavailable must not break the frame
         log.warning("Could not update Home Assistant entities", exc_info=True)
 
@@ -482,6 +514,7 @@ async def frame_next(request):
     async with db_lock:  # persist the low-battery flag push_states may have changed
         db = load_db()
         db["state"]["low_battery_notified"] = state_copy.get("low_battery_notified", False)
+        db["state"]["error_notified"] = state_copy.get("error_notified")
         save_db(db)
 
     headers = {"X-Sleep-Seconds": str(sleep), **extra_headers}

@@ -1,0 +1,96 @@
+# Wiring: XIAO ESP32-S3 → Waveshare 13.3" e-Paper HAT+ (E)
+
+> **Start with the picture guide: open [`wiring.html`](wiring.html) in a browser.** It has diagrams for every step, lets you set your own cable colours, and shows the easy way to solder the battery pads. This file is the text reference.
+
+## Parts
+- Seeed XIAO ESP32-S3 (headers soldered)
+- Waveshare 13.3" E6 panel + HAT+ driver board, with the panel's ribbon cable plugged into the HAT
+- 3.7 V protected LiPo, 3000 mAh
+- Momentary push button (next picture)
+- SPST toggle switch + 3 mm LED + 1.5 kΩ resistor (config mode)
+- 2 × 1 MΩ resistors + 1 × 100 nF ceramic capacitor (battery voltage reading; optional but recommended)
+- Female–female jumper wires
+
+## Display: 10 wires
+Use the 10-wire cable that came with the HAT: its small white plug goes into the HAT's 10-pin socket (printed left→right: PWR BUSY RST DC CS_S CS_M SCLK DIN GND VCC) and its jumper ends push onto the XIAO pins. The 40-pin socket on the HAT's underside is only a fallback.
+
+| HAT signal | XIAO pin | (GPIO) | 40-pin header pin, if needed |
+|---|---|---|---|
+| VCC  | **3V3** | — | 1 (3.3V) |
+| GND  | **GND** | — | 6 |
+| DIN  | **D10** | GPIO9  | 19 |
+| CLK  | **D8**  | GPIO7  | 23 |
+| CS_M | **D1**  | GPIO2  | 24 |
+| CS_S | **D6**  | GPIO43 | 26 |
+| DC   | **D2**  | GPIO3  | 22 |
+| RST  | **D7**  | GPIO44 | 11 |
+| BUSY | **D4**  | GPIO5  | 18 |
+| PWR  | **D5**  | GPIO6  | 12 |
+
+The HAT+ (E) has **no voltage switch**: it runs on 3.3 V only, so there is nothing to set.
+
+## Button
+```
+D0 (GPIO1) ──── [ button ] ──── GND
+```
+No resistor is needed; the firmware enables the internal pull-up. Pressing it wakes the frame and skips to the next picture.
+
+## Config switch and LED
+A small **on/off toggle switch** (SPST) and an LED with a resistor. The LED is wired to the switch itself, so it lights whenever config mode is switched on and uses no extra pin.
+```
+3V3 ──[ 1.5 kΩ ]──▶|── LED ──┐
+                             ├── D9 (GPIO8)
+                             │
+                        [ toggle switch ]
+                             │
+                            GND
+```
+- **Switch off:** D9 is held high by the internal pull-up and the LED is off.
+- **Switch on:** D9 is pulled to GND, which wakes the frame into config mode, and the LED lights (about 1 mA).
+- LED polarity: the longer leg (anode) goes toward the resistor and 3V3; the flat side (cathode) goes toward D9.
+- Use a **red, orange or yellow** LED. Blue and white LEDs need close to 3 V and will be very dim from 3.3 V.
+- The LED stays lit as long as the switch is on, even if the frame has shut down because of a flat battery. That's a useful "you forgot to switch it off" warning.
+
+## Battery voltage (optional, recommended)
+```
+BAT+ ──[ 1 MΩ ]──┬──[ 1 MΩ ]── GND
+                 │
+                 ├── D3 (GPIO4)
+                 │
+               [100 nF]
+                 │
+                GND
+```
+The divider draws about 2 µA. Without it, set `HAS_BATTERY_DIVIDER 0` in `config.h`; the frame will still work but Home Assistant won't know the battery level.
+
+## Battery
+- Solder a **JST-PH pigtail** (not the battery itself) to the **BAT+ / BAT−** pads on the underside of the XIAO, then plug the battery in. Flux, tin pad and wire separately, tape the wire flat on the pad, touch with the iron for 2 s, then hot-glue for strain relief (pictures in `wiring.html`).
+- ⚠️ **Check polarity with a multimeter before soldering.** JST-PH battery leads are not wired the same way by every seller, and reversing them will destroy the XIAO.
+- Use a **protected** cell (it has a small circuit board under the tape).
+- The XIAO charges the battery over USB-C at about 100 mA, so a fully flat 3000 mAh cell takes more than a day to fill. Topping it up every few months is fine.
+
+## Overall layout
+```
+        ┌──────────── 13.3" Spectra 6 panel ────────────┐
+        │                                               │
+        └──────────────────────┬────────────────────────┘
+                     ribbon cable (fragile, don't crease)
+                               │
+                      ┌────────┴────────┐
+                      │  HAT+ (E) board │
+                      └────────┬────────┘
+                         10 jumper wires
+                               │
+   button ── D0 ┌──────────────┴──┐ BAT+/BAT− ── 3000 mAh LiPo
+   divider ── D3│ XIAO ESP32-S3   │
+switch+LED ── D9│                 │
+                └───────┬─────────┘
+                     USB-C (charging and flashing)
+```
+
+## Order of assembly
+1. Flash the XIAO on its own and check it joins Wi-Fi (see README).
+2. Wire the HAT and panel and run it from USB. You should see a refresh about 20 s after reset.
+3. Add the divider, then the battery.
+4. **Measure the sleep current:** put a multimeter in series with the battery after the frame goes to sleep. Expect well under 0.1 mA. If it is much higher, the HAT's own idle draw is the likely cause; ask me about adding a MOSFET to switch the HAT's VCC.
+5. Mount everything in the frame.

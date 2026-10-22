@@ -1,5 +1,10 @@
+# Secrets: Wi-Fi password, frame token, GitHub token
+firmware/eink_frame/config.h
 .env
 .env.*
-.DS_Store
+
+# Build output and caches
+*.bin
 __pycache__/
 *.pyc
+.DS_Store

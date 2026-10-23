@@ -8,11 +8,24 @@
 #include <SPI.h>
 #include <stdarg.h>
 
+#include "config.h"
 #include "pins.h"
+
+// The panel sits at the end of ~15 cm jumper wires, not a PCB trace, so the
+// clock is kept well below Waveshare's 10 MHz: faster edges ring and cross
+// talk between neighbouring wires, flipping bits (stray yellow, leftovers of
+// the previous picture). Override either in config.h if needed.
+#ifndef EPD_SPI_HZ
+#define EPD_SPI_HZ 2000000
+#endif
+// Pause after each row of image data, as Waveshare's driver does (1 ms).
+#ifndef EPD_ROW_PAUSE_US
+#define EPD_ROW_PAUSE_US 1000
+#endif
 
 namespace {
 
-constexpr uint32_t kSpiHz = 10000000;
+constexpr uint32_t kSpiHz = EPD_SPI_HZ;
 constexpr uint32_t kBusyTimeoutMs = 60000;
 // A real refresh takes ~19 s. Finishing much faster means BUSY isn't really
 // connected (or is stuck high), so the panel most likely didn't change.
@@ -219,6 +232,7 @@ bool display(const uint8_t *frame) {
     digitalWrite(PIN_EPD_DC, HIGH);
     for (size_t row = 0; row < EPD_HEIGHT; row++) {
       SPI.writeBytes(frame + row * kRowBytes + offset, kHalfRowBytes);
+      delayMicroseconds(EPD_ROW_PAUSE_US);
     }
     deselect();
   }
@@ -232,7 +246,10 @@ bool clear(uint8_t colour) {
     select(t);
     command(DTM);
     digitalWrite(PIN_EPD_DC, HIGH);
-    for (size_t r = 0; r < EPD_HEIGHT; r++) SPI.writeBytes(row, sizeof(row));
+    for (size_t r = 0; r < EPD_HEIGHT; r++) {
+      SPI.writeBytes(row, sizeof(row));
+      delayMicroseconds(EPD_ROW_PAUSE_US);
+    }
     deselect();
   }
   return refresh();
@@ -252,6 +269,7 @@ bool testPattern() {
       uint8_t c = kColours[r * 6 / EPD_HEIGHT];
       memset(row, (c << 4) | c, sizeof(row));
       SPI.writeBytes(row, sizeof(row));
+      delayMicroseconds(EPD_ROW_PAUSE_US);
     }
     deselect();
   }

@@ -25,3 +25,9 @@
 
 // Password for the "EInkFrame-xxxx" setup hotspot used in config mode (8+ chars).
 #define SETUP_AP_PASSWORD "einkframe"
+
+// ---- Panel link speed (optional) --------------------------------------------
+// Lower these if pictures show stray colours or parts of the previous picture
+// (long or bundled jumper wires). Defaults: 2 MHz and 1 ms per row.
+// #define EPD_SPI_HZ 1000000
+// #define EPD_ROW_PAUSE_US 1000

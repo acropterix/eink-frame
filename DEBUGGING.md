@@ -92,6 +92,17 @@ Best for **intermittent** faults, where one run says one thing and the next says
 
 ---
 
+## 3c. Firmware or hardware? The reference panel test
+
+`firmware/panel_test/panel_test.ino` runs **Waveshare's own driver sequence** on the same pins, with no Wi-Fi or add-on. Flash it, open the Serial Monitor (115200, Newline): it shows white, then six bands (black, white, yellow, red, blue, green) and prints how long each refresh took. Type `w`, `k`, `y`, `b` or `s` for white, black, yellow, bands or sleep.
+
+- **Correct colours here, wrong in the frame firmware:** a firmware problem.
+- **Wrong here too:** hardware: wiring, ribbons, power supply, or a damaged HAT/panel.
+
+Flash `eink_frame.ino` again afterwards.
+
+---
+
 ## 4. The colour test (config mode)
 
 1. Flip the **config switch** on (LED lights). **No switch fitted?** Press and **keep holding the button for 3 s**. Home Assistant shows the red config-mode banner within a few seconds.

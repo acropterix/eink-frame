@@ -62,8 +62,9 @@ Plug USB-C into the Mac, open **Tools → Serial Monitor** (115200), press **R**
 | `[http] status -1` | Server address/port wrong, or the add-on stopped | Check `192.168.2.10:8200` and that the add-on is running |
 | `[http] status 401` | Token mismatch | Same token in add-on and frame |
 | `[http] status 304` | Server says keep current picture | Step 0 |
-| `BUSY stayed low … at start-up` | Panel never woke up: **power side** | VCC, GND, PWR (D5), RST (D7) wires; all ribbons; step 5 |
-| `BUSY stayed low … at power on` / `at refresh` | Panel woke but couldn't finish | Ribbons (most likely), then CS_M/CS_S |
+| `BUSY wire looks disconnected` | Nothing is driving BUSY | HAT `BUSY` → **D4**: housing fully on, right pin, wire intact |
+| `HAT held BUSY low … at start-up` | Panel never woke up: **power side** | PWR (D5), RST (D7), VCC→3V3, GND; all three ribbon latches; step 5 |
+| `HAT held BUSY low … at power on` / `at refresh` | Panel woke but couldn't finish | Ribbons (most likely), then CS_M/CS_S |
 | `refresh 'finished' in 40 ms …` | **BUSY wire** loose or on the wrong pin | BUSY → D4 |
 | `refresh took ~19000 ms` but the panel didn't change | Commands sent, but the image data never arrived | DIN (D10), SCLK (D8), DC (D2), CS_M (D1) / CS_S (D6) |
 
@@ -82,7 +83,8 @@ Plug USB-C into the Mac, open **Tools → Serial Monitor** (115200), press **R**
 | Bands on the **right** half only | — | **CS_M** wire (HAT `CS_M` → D1) |
 | Noise, stripes, wrong colours | ~19 s | **DIN** (D10), **SCLK** (D8) or **DC** (D2) loose or swapped |
 | No change, flickers | ~19 s | DIN/SCLK not arriving, or a ribbon is partly in |
-| No change, no flicker | "BUSY stayed low … start-up" | Power side: VCC, GND, PWR, RST, or a ribbon not latched |
+| No change, no flicker | "BUSY wire looks disconnected" | **BUSY** wire (→ D4) |
+| No change, no flicker | "HAT held BUSY low … start-up" | Power side: VCC, GND, PWR, RST, or a ribbon not latched |
 | No change | "finished in N ms" | **BUSY** wire (→ D4) |
 
 Use **Clear to white** to check the fix, then press **Get next picture from server**. Flip the switch off when done.

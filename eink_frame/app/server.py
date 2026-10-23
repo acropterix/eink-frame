@@ -15,6 +15,7 @@ import re
 import time
 import uuid
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from urllib.parse import quote
 
@@ -34,6 +35,44 @@ UI_PORT = int(os.environ.get("UI_PORT", "8099"))
 FRAME_PORT = int(os.environ.get("FRAME_PORT", "8200"))
 SUPERVISOR_TOKEN = os.environ.get("SUPERVISOR_TOKEN")
 HA_API = "http://supervisor/core/api"
+
+# Home Assistant's time zone. The add-on container itself runs on UTC, so
+# quiet hours and "today" for dated pictures must use this instead.
+LOCAL_TZ = None
+
+
+def local_now():
+    return datetime.now(LOCAL_TZ) if LOCAL_TZ else datetime.now().astimezone()
+
+
+async def resolve_timezone():
+    """Use HA's configured time zone (TZ env from the Supervisor, else the HA config API)."""
+    global LOCAL_TZ
+    name = os.environ.get("TZ", "")
+    if not name and SUPERVISOR_TOKEN:
+        try:
+            async with ClientSession() as session:
+                async with session.get(f"{HA_API}/config",
+                                       headers={"Authorization": f"Bearer {SUPERVISOR_TOKEN}"}) as r:
+                    name = (await r.json()).get("time_zone", "")
+        except Exception:  # noqa: BLE001 - fall back to UTC rather than not starting
+            log.warning("Could not read Home Assistant's time zone", exc_info=True)
+    if name:
+        try:
+            LOCAL_TZ = ZoneInfo(name)
+        except Exception:  # noqa: BLE001
+            log.warning("Unknown time zone %r, using UTC", name)
+    log.info("Time zone %s, local time now %s", name or "UTC", local_now().strftime("%Y-%m-%d %H:%M"))
+
+
+class HideToken(logging.Filter):
+    """Keep the frame token out of the access log (the frame sends it in the URL)."""
+    PATTERN = re.compile(r"(token=)[^&\s\"]+")
+
+    def filter(self, record):
+        if isinstance(record.msg, str) and "token=" in record.msg:
+            record.msg = self.PATTERN.sub(r"\1***", record.msg)
+        return True
 
 DEFAULT_OPTIONS = {
     "frame_token": "",
@@ -325,9 +364,9 @@ def record_frame_report(state, query):
     # Problems the frame hit since its last check-in (the panel itself just
     # keeps showing the old picture, so this is the only way to see them).
     if query.get("fw"):
-        error = (query.get("err") or "")[:160] or None
+        error = (query.get("err") or "")[:240] or None
         if error and error != state.get("frame_error"):
-            state["frame_error_iso"] = datetime.now().astimezone().isoformat(timespec="seconds")
+            state["frame_error_iso"] = local_now().isoformat(timespec="seconds")
             log.warning("Frame reported a problem: %s", error)
         state["frame_error"] = error
     if query.get("refresh_ms"):
@@ -434,17 +473,17 @@ async def frame_heartbeat(request):
         raise web.HTTPUnauthorized(text="bad token")
 
     on = request.query.get("config") == "1"
-    now = datetime.now()
+    now = local_now()
     ip = request.query.get("ip") or request.remote
     async with db_lock:
         db = load_db()
         state = db["state"]
         was_on = bool(state.get("config_mode"))
         if on and not was_on:
-            state["config_since_iso"] = now.astimezone().isoformat(timespec="seconds")
+            state["config_since_iso"] = now.isoformat(timespec="seconds")
         state["config_mode"] = on
         state["config_ip"] = ip
-        state["config_last_iso"] = now.astimezone().isoformat(timespec="seconds")
+        state["config_last_iso"] = now.isoformat(timespec="seconds")
         try:
             mv = int(request.query.get("battery_mv", "0"))
         except ValueError:
@@ -471,7 +510,7 @@ async def frame_next(request):
         raise web.HTTPUnauthorized(text="bad token")
 
     reason = request.query.get("reason", "timer")
-    now = datetime.now()
+    now = local_now()
     sleep = next_sleep_seconds(opts, now)
 
     async with db_lock:
@@ -488,13 +527,13 @@ async def frame_next(request):
             mv = 0
         state.update({
             "last_seen": time.time(),
-            "last_seen_iso": now.astimezone().isoformat(timespec="seconds"),
+            "last_seen_iso": now.isoformat(timespec="seconds"),
             "battery_mv": mv or None,
             "battery_percent": battery_percent(mv),
             "rssi": request.query.get("rssi"),
             "fw": request.query.get("fw"),
             "last_reason": reason,
-            "next_wake_iso": (now + timedelta(seconds=sleep)).astimezone().isoformat(timespec="seconds"),
+            "next_wake_iso": (now + timedelta(seconds=sleep)).isoformat(timespec="seconds"),
             "image_count": len(db["images"]),
         })
 
@@ -748,7 +787,7 @@ async def post_frame_settings(request):
         cfg = frame_config(db)
         cfg["version"] += 1
         cfg["changes"].append({"version": cfg["version"], "settings": changes,
-                               "created_iso": datetime.now().astimezone().isoformat(timespec="seconds")})
+                               "created_iso": local_now().isoformat(timespec="seconds")})
         cfg["changes"] = cfg["changes"][-50:]
         save_db(db)
     log.info("Frame settings version %d: %s", cfg["version"], ", ".join(sorted(changes)))
@@ -779,7 +818,7 @@ async def upload_firmware(request):
     tmp.write_bytes(data)
     tmp.replace(FIRMWARE_PATH)
     meta = {"version": version, "size": len(data), "md5": hashlib.md5(data).hexdigest(),
-            "uploaded_iso": datetime.now().astimezone().isoformat(timespec="seconds")}
+            "uploaded_iso": local_now().isoformat(timespec="seconds")}
     async with db_lock:
         db = load_db()
         db["firmware"] = meta
@@ -845,6 +884,9 @@ def build_frame_app(main_app):
 
 async def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.Formatter.converter = lambda ts: datetime.fromtimestamp(ts, LOCAL_TZ).timetuple()
+    logging.getLogger("aiohttp.access").addFilter(HideToken())
+    await resolve_timezone()
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
     opts = load_options()
     ui_app = build_ui_app(opts)

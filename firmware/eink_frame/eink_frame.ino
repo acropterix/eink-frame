@@ -39,7 +39,7 @@ constexpr uint16_t kMinFirmwareUpdateMv = 3700;
 RTC_DATA_ATTR uint8_t rtcFailures = 0;
 // The last thing that went wrong, sent to the add-on on the next check-in so
 // Home Assistant can show it (the panel itself just keeps the old picture).
-RTC_DATA_ATTR char rtcError[96] = "";
+RTC_DATA_ATTR char rtcError[208] = "";
 RTC_DATA_ATTR uint32_t rtcRefreshMs = 0;
 
 void noteError(const char *fmt, ...) {

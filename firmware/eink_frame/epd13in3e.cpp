@@ -18,7 +18,7 @@ constexpr uint32_t kBusyTimeoutMs = 60000;
 // connected (or is stuck high), so the panel most likely didn't change.
 constexpr uint32_t kMinRefreshMs = 3000;
 
-char errorText[96] = "";
+char errorText[192] = "";
 uint32_t refreshMs = 0;
 
 void fail(const char *fmt, ...) {
@@ -87,12 +87,30 @@ void send(Target t, uint8_t cmd, const uint8_t *buf, size_t len) {
   deselect();
 }
 
+// True when nothing drives the BUSY line: it follows our own pull-up and
+// pull-down. A line the HAT is really holding low stays low under the pull-up.
+bool busyFloating() {
+  pinMode(PIN_EPD_BUSY, INPUT_PULLUP);
+  delay(5);
+  bool high = digitalRead(PIN_EPD_BUSY) == HIGH;
+  pinMode(PIN_EPD_BUSY, INPUT_PULLDOWN);
+  delay(5);
+  bool low = digitalRead(PIN_EPD_BUSY) == LOW;
+  pinMode(PIN_EPD_BUSY, INPUT);
+  return high && low;
+}
+
 // BUSY is LOW while the controller works and HIGH when idle.
 bool waitIdle(const char *stage) {
   uint32_t start = millis();
   while (digitalRead(PIN_EPD_BUSY) == LOW) {
     if (millis() - start > kBusyTimeoutMs) {
-      fail("BUSY stayed low for 60 s at %s (check BUSY, PWR, VCC/GND wires and the ribbons)", stage);
+      if (busyFloating()) {
+        fail("BUSY wire looks disconnected at %s (HAT BUSY -> D4)", stage);
+      } else {
+        fail("HAT held BUSY low for 60 s at %s: panel not starting. Check PWR->D5, RST->D7, VCC->3V3, "
+             "GND, and that all 3 ribbon latches are closed", stage);
+      }
       return false;
     }
     delay(10);
@@ -139,9 +157,7 @@ uint32_t lastRefreshMs() { return refreshMs; }
 
 void begin() {
   errorText[0] = '\0';
-  // Pull-down: a loose BUSY wire then reads "busy" and times out loudly,
-  // instead of floating high and looking like an instant refresh.
-  pinMode(PIN_EPD_BUSY, INPUT_PULLDOWN);
+  pinMode(PIN_EPD_BUSY, INPUT);  // no pull, as in Waveshare's driver
   pinMode(PIN_EPD_RST, OUTPUT);
   pinMode(PIN_EPD_DC, OUTPUT);
   pinMode(PIN_EPD_CS_M, OUTPUT);

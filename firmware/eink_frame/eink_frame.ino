@@ -135,6 +135,23 @@ void setup() {
                 (unsigned)ESP.getPsramSize());
   if (esp_reset_reason() == ESP_RST_BROWNOUT) noteError("brown-out reset: the supply dipped (panel power-on?)");
 
+  // Wiring test: only after a reset with the Serial Monitor open (never on
+  // timer or button wakes, so it costs nothing on battery).
+  if (strcmp(reason, "boot") == 0) {
+    for (int i = 0; i < 20 && !Serial; i++) delay(100);
+    if (Serial) {
+      Serial.println("[boot] Type test + Enter within 5 s for the live wiring test...");
+      String typed;
+      uint32_t until = millis() + 5000;
+      while (millis() < until) {
+        while (Serial.available()) typed += (char)Serial.read();
+        if (typed.indexOf("test") >= 0) break;
+        delay(20);
+      }
+      if (typed.indexOf("test") >= 0) epd::wiringTest();
+    }
+  }
+
   if (batteryMv && batteryMv < kCriticalBatteryMv) {
     Serial.println("[boot] battery critical, not doing anything");
     power::sleepFor(kLowBatterySleepS);

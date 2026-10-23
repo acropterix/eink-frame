@@ -71,6 +71,27 @@ Plug USB-C into the Mac, open **Tools → Serial Monitor** (115200), press **R**
 
 ---
 
+## 3b. Live wiring test (no multimeter needed)
+
+Best for **intermittent** faults, where one run says one thing and the next says another.
+
+1. Frame on USB, **Serial Monitor** open at 115200, line ending **Newline**.
+2. Press **R** on the XIAO. When it prints `Type test + Enter within 5 s`, type `test` and press Enter.
+3. The panel is powered and reset, and the BUSY line is printed live:
+
+| Prints | Means |
+|---|---|
+| `BUSY HIGH = ready` | Panel started. Wiring to it is fine. |
+| `BUSY LOW = busy / panel not starting` | BUSY wire OK, but the panel isn't starting: PWR (D5), RST (D7), VCC, GND, ribbons |
+| `BUSY FLOATING = BUSY wire not connected` | BUSY wire open between the panel and D4 |
+
+4. **Wiggle one thing at a time** and watch for `<-- changed`: the BUSY jumper at D4, then the white plug in the HAT, then each ribbon latch. Whatever makes it change is the loose connection.
+5. Type `r` + Enter to reset the panel again (a working panel goes `HIGH` within a second). Type `q` + Enter to finish.
+
+**Fixing a loose jumper:** push the black housing fully down on the pin. If the metal crimp inside wiggles or was re-crimped, replace that wire. A male–female jumper from the HAT's 40-pin socket (BUSY = pin **18**) to **D4** works as a substitute.
+
+---
+
 ## 4. The colour test (config mode)
 
 1. Flip the **config switch** on (LED lights). **No switch fitted?** Press and **keep holding the button for 3 s**. Home Assistant shows the red config-mode banner within a few seconds.

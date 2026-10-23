@@ -258,6 +258,46 @@ bool testPattern() {
   return refresh();
 }
 
+void wiringTest() {
+  // Panel powered and reset, then BUSY printed live so a loose wire shows up
+  // the moment it's wiggled. 'r' + Enter resets the panel again, 'q' quits.
+  begin();
+  digitalWrite(PIN_EPD_PWR, HIGH);
+  delay(10);
+  reset();
+  Serial.println("[test] Panel power ON (PWR/D5 high), panel reset. Wiggle one wire or ribbon at a time.");
+  Serial.println("[test] A good panel shows 'HIGH = ready' within a second of each reset.");
+  Serial.println("[test] Type r + Enter to reset the panel again, q + Enter to stop (stops by itself after 10 min).");
+  const char *last = "";
+  uint32_t start = millis(), lastPrint = 0;
+  while (millis() - start < 10UL * 60 * 1000) {
+    const char *state = busyFloating() ? "FLOATING = BUSY wire not connected (D4)"
+                        : digitalRead(PIN_EPD_BUSY) == HIGH ? "HIGH = ready"
+                                                            : "LOW = busy / panel not starting";
+    if (strcmp(state, last) != 0 || millis() - lastPrint >= 3000) {
+      Serial.printf("[test] %6.1f s  BUSY %s%s\n", (millis() - start) / 1000.0, state,
+                    strcmp(state, last) != 0 && last[0] ? "   <-- changed" : "");
+      last = state;
+      lastPrint = millis();
+    }
+    while (Serial.available()) {
+      char c = Serial.read();
+      if (c == 'q' || c == 'Q') {
+        digitalWrite(PIN_EPD_PWR, LOW);
+        Serial.println("[test] stopped, panel power off");
+        return;
+      }
+      if (c == 'r' || c == 'R') {
+        reset();
+        Serial.println("[test] panel reset (RST/D7 pulsed)");
+      }
+    }
+    delay(100);
+  }
+  digitalWrite(PIN_EPD_PWR, LOW);
+  Serial.println("[test] 10 minutes up, panel power off");
+}
+
 void sleep() {
   const uint8_t check = 0xA5;
   send(BOTH, DSLP, &check, 1);

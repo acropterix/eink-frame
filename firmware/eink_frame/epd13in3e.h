@@ -21,6 +21,9 @@ bool display(const uint8_t *frame);
 bool clear(uint8_t colour);
 // Six colour bands (black, white, yellow, red, blue, green) for wiring tests.
 bool testPattern();
+// Interactive wiring check over the Serial Monitor: powers the panel and
+// prints the BUSY line live (ready / busy / not connected) until 'q'.
+void wiringTest();
 // Put the controller to sleep and cut panel power.
 void sleep();
 // Why the last init/display/clear failed, in words (empty after success).

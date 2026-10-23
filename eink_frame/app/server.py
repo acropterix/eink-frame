@@ -53,17 +53,23 @@ async def ha_time_zone():
         async with ClientSession() as session:
             async with session.get(f"{HA_API}/config",
                                    headers={"Authorization": f"Bearer {SUPERVISOR_TOKEN}"}) as r:
-                return (await r.json(content_type=None)).get("time_zone", "") or ""
+                if r.status != 200:
+                    log.warning("Home Assistant config API answered %s; can't read its time zone", r.status)
+                    return ""
+                zone = (await r.json(content_type=None)).get("time_zone", "") or ""
+                log.info("Home Assistant's time zone setting: %s", zone or "(none)")
+                return zone
     except Exception:  # noqa: BLE001 - fall back rather than not starting
         log.warning("Could not read Home Assistant's time zone", exc_info=True)
         return ""
 
 
-async def resolve_timezone():
-    """Use Home Assistant's own time zone. The Supervisor's TZ variable can
-    still say UTC when HA itself is set to a local zone, so it's only a fallback."""
+async def resolve_timezone(opts):
+    """The add-on's time_zone option if set, else Home Assistant's own time
+    zone. The Supervisor's TZ variable can say UTC when HA itself is set to a
+    local zone, so it's only the last fallback."""
     global LOCAL_TZ
-    name = await ha_time_zone() or os.environ.get("TZ", "")
+    name = (opts.get("time_zone") or "").strip() or await ha_time_zone() or os.environ.get("TZ", "")
     if name:
         try:
             LOCAL_TZ = ZoneInfo(name)
@@ -91,6 +97,7 @@ DEFAULT_OPTIONS = {
     "saturation": 0.5,
     "shuffle": False,
     "low_battery_percent": 15,
+    "time_zone": "",
 }
 
 # LiPo resting voltage (mV) -> approximate charge (%).
@@ -894,9 +901,9 @@ async def main():
     # staticmethod: a plain lambda on the class would be called with `self` too.
     logging.Formatter.converter = staticmethod(lambda ts: datetime.fromtimestamp(ts, LOCAL_TZ).timetuple())
     logging.getLogger("aiohttp.access").addFilter(HideToken())
-    await resolve_timezone()
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
     opts = load_options()
+    await resolve_timezone(opts)
     ui_app = build_ui_app(opts)
     frame_app = build_frame_app(ui_app)
 

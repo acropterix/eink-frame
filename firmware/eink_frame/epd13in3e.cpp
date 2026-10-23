@@ -141,7 +141,8 @@ bool refresh() {
   send(BOTH, POF, POF_V, sizeof(POF_V));
   Serial.printf("[epd] refresh took %lu ms\n", (unsigned long)refreshMs);
   if (refreshMs < kMinRefreshMs) {
-    fail("refresh 'finished' in %lu ms, so the panel didn't really update (BUSY wire loose or on the wrong pin?)",
+    fail("panel never went busy (refresh %lu ms): it isn't getting commands. Check DIN->D10, SCLK->D8, "
+         "CS_M->D1, CS_S->D6, DC->D2 and the ribbon latches",
          (unsigned long)refreshMs);
     return false;
   }
@@ -174,6 +175,14 @@ bool init() {
   digitalWrite(PIN_EPD_PWR, HIGH);
   delay(10);
   reset();
+  // A BUSY line nobody drives just follows our own pull-up/pull-down. Catch
+  // that first: otherwise it can read "idle" and every refresh looks instant.
+  if (busyFloating()) {
+    fail("BUSY wire isn't connected: nothing drives it (HAT BUSY -> D4, left side 5th pin)");
+    return false;
+  }
+  Serial.printf("[epd] BUSY is driven by the HAT (%s after reset)\n",
+                digitalRead(PIN_EPD_BUSY) == HIGH ? "high" : "low");
   if (!waitIdle("start-up")) return false;
 
   send(MASTER, AN_TM, AN_TM_V, sizeof(AN_TM_V));

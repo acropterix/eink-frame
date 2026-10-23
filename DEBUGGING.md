@@ -63,9 +63,10 @@ Plug USB-C into the Mac, open **Tools → Serial Monitor** (115200), press **R**
 | `[http] status 401` | Token mismatch | Same token in add-on and frame |
 | `[http] status 304` | Server says keep current picture | Step 0 |
 | `BUSY wire looks disconnected` | Nothing is driving BUSY | HAT `BUSY` → **D4**: housing fully on, right pin, wire intact |
+| `BUSY wire isn't connected: nothing drives it` | Same, caught before the refresh | HAT `BUSY` → **D4** (left side, 5th pin). Beep D4 ↔ 40-pin socket pin 18 |
+| `panel never went busy … isn't getting commands` | BUSY is fine, but the controller ignores the commands | DIN → D10, SCLK → D8, CS_M → D1, CS_S → D6, DC → D2, ribbon latches |
 | `HAT held BUSY low … at start-up` | Panel never woke up: **power side** | PWR (D5), RST (D7), VCC→3V3, GND; all three ribbon latches; step 5 |
 | `HAT held BUSY low … at power on` / `at refresh` | Panel woke but couldn't finish | Ribbons (most likely), then CS_M/CS_S |
-| `refresh 'finished' in 40 ms …` | **BUSY wire** loose or on the wrong pin | BUSY → D4 |
 | `refresh took ~19000 ms` but the panel didn't change | Commands sent, but the image data never arrived | DIN (D10), SCLK (D8), DC (D2), CS_M (D1) / CS_S (D6) |
 
 ---

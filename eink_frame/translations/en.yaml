@@ -25,5 +25,8 @@ configuration:
   low_battery_percent:
     name: Low battery warning (%)
     description: Create a Home Assistant notification when the frame reports this level or lower.
+  time_zone:
+    name: Time zone
+    description: Leave empty to use Home Assistant's time zone. Set it (e.g. America/Los_Angeles) if quiet hours run at the wrong time.
 network:
   8200/tcp: Frame API port

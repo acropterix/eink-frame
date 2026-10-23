@@ -45,18 +45,25 @@ def local_now():
     return datetime.now(LOCAL_TZ) if LOCAL_TZ else datetime.now().astimezone()
 
 
+async def ha_time_zone():
+    """The time zone set in Home Assistant (Settings > System > General), or ""."""
+    if not SUPERVISOR_TOKEN:
+        return ""
+    try:
+        async with ClientSession() as session:
+            async with session.get(f"{HA_API}/config",
+                                   headers={"Authorization": f"Bearer {SUPERVISOR_TOKEN}"}) as r:
+                return (await r.json(content_type=None)).get("time_zone", "") or ""
+    except Exception:  # noqa: BLE001 - fall back rather than not starting
+        log.warning("Could not read Home Assistant's time zone", exc_info=True)
+        return ""
+
+
 async def resolve_timezone():
-    """Use HA's configured time zone (TZ env from the Supervisor, else the HA config API)."""
+    """Use Home Assistant's own time zone. The Supervisor's TZ variable can
+    still say UTC when HA itself is set to a local zone, so it's only a fallback."""
     global LOCAL_TZ
-    name = os.environ.get("TZ", "")
-    if not name and SUPERVISOR_TOKEN:
-        try:
-            async with ClientSession() as session:
-                async with session.get(f"{HA_API}/config",
-                                       headers={"Authorization": f"Bearer {SUPERVISOR_TOKEN}"}) as r:
-                    name = (await r.json()).get("time_zone", "")
-        except Exception:  # noqa: BLE001 - fall back to UTC rather than not starting
-            log.warning("Could not read Home Assistant's time zone", exc_info=True)
+    name = await ha_time_zone() or os.environ.get("TZ", "")
     if name:
         try:
             LOCAL_TZ = ZoneInfo(name)
@@ -884,7 +891,8 @@ def build_frame_app(main_app):
 
 async def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    logging.Formatter.converter = lambda ts: datetime.fromtimestamp(ts, LOCAL_TZ).timetuple()
+    # staticmethod: a plain lambda on the class would be called with `self` too.
+    logging.Formatter.converter = staticmethod(lambda ts: datetime.fromtimestamp(ts, LOCAL_TZ).timetuple())
     logging.getLogger("aiohttp.access").addFilter(HideToken())
     await resolve_timezone()
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
@@ -892,8 +900,11 @@ async def main():
     ui_app = build_ui_app(opts)
     frame_app = build_frame_app(ui_app)
 
-    ui_runner = web.AppRunner(ui_app)
-    frame_runner = web.AppRunner(frame_app)
+    # No %t: the line already starts with the local time, and aiohttp's own
+    # timestamp would be in the container's UTC.
+    access_format = '%a "%r" %s %b "%{User-Agent}i"'
+    ui_runner = web.AppRunner(ui_app, access_log_format=access_format)
+    frame_runner = web.AppRunner(frame_app, access_log_format=access_format)
     await ui_runner.setup()
     await frame_runner.setup()
     await web.TCPSite(ui_runner, "0.0.0.0", UI_PORT).start()

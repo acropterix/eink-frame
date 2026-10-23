@@ -13,6 +13,12 @@ uint16_t batteryMv(const Settings &s);
 int batteryPercent(uint16_t mv);
 // True while the config toggle switch is on (D9 pulled to GND), debounced.
 bool configSwitchOn();
+// True while the button (D0) is pressed, debounced.
+bool buttonDown();
+// True if the button is still down and stays down until `ms` after start-up.
+bool buttonHeldFor(uint32_t ms);
+// Hand the wake pins back to normal GPIO after deep sleep.
+void releaseWakePins();
 // Deep sleep. The button always wakes the frame; the config switch wakes it
 // too unless it is already on (e.g. sleeping because the battery is flat).
 [[noreturn]] void sleepFor(uint32_t seconds);

@@ -27,7 +27,7 @@ table{border-collapse:collapse;width:100%}
 .battery.low #meterfill{background:var(--warn)}.battery.low{color:var(--warn)}td{padding:3px 0;vertical-align:top}td:first-child{color:var(--muted);width:42%}
 </style></head><body><main>
 <h1>E-Ink Frame setup</h1>
-<div class="card warn">Config mode keeps the frame awake and drains the battery (about a day on a full charge). Turn the config switch off when you're done.</div>
+<div class="card warn">Config mode keeps the frame awake and drains the battery (about a day on a full charge). When you're done, turn the config switch off, or hold the button for 3 s (or press Restart). Without a switch it turns itself off after 30 minutes.</div>
 
 <section class="card"><h2>Status</h2>
 <div id="battery" class="battery"><div class="meter"><div id="meterfill"></div></div><span id="battext">Battery: reading…</span></div>

@@ -72,7 +72,7 @@ Plug USB-C into the Mac, open **Tools → Serial Monitor** (115200), press **R**
 
 ## 4. The colour test (config mode)
 
-1. Flip the **config switch** on (LED lights).
+1. Flip the **config switch** on (LED lights). **No switch fitted?** Press and **keep holding the button for 3 s**. Home Assistant shows the red config-mode banner within a few seconds.
 2. On your phone or Mac open **http://eink-frame.local** (or join the `EInkFrame-xxxx` hotspot → `http://192.168.4.1`).
 3. Press **Colour test**. Wait ~25 s for the message.
 
@@ -87,7 +87,7 @@ Plug USB-C into the Mac, open **Tools → Serial Monitor** (115200), press **R**
 | No change, no flicker | "HAT held BUSY low … start-up" | Power side: VCC, GND, PWR, RST, or a ribbon not latched |
 | No change | "finished in N ms" | **BUSY** wire (→ D4) |
 
-Use **Clear to white** to check the fix, then press **Get next picture from server**. Flip the switch off when done.
+Use **Clear to white** to check the fix, then press **Get next picture from server**. Flip the switch off when done (no switch: hold the button 3 s again, press **Restart**, or wait 30 min).
 
 ---
 

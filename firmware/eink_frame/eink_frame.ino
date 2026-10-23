@@ -120,8 +120,12 @@ void setup() {
     power::sleepFor(kLowBatterySleepS);
   }
 
-  if (power::configSwitchOn()) {
-    if (portal::run(s) == portal::Exit::BatteryCritical) power::sleepFor(kLowBatterySleepS);
+  power::releaseWakePins();
+  // Config mode: the switch, or (no switch fitted) holding the button for 3 s.
+  bool bySwitch = power::configSwitchOn();
+  bool byButton = !bySwitch && power::buttonDown() && power::buttonHeldFor(portal::kLongPressMs);
+  if (bySwitch || byButton) {
+    if (portal::run(s, byButton) == portal::Exit::BatteryCritical) power::sleepFor(kLowBatterySleepS);
     settings::loadRemote(rs);  // the config page may have cancelled a trial
     reason = "config";         // config mode just ended: do a normal check-in now
     batteryMv = power::batteryMv(s);

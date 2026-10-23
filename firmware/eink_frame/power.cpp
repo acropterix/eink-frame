@@ -19,9 +19,10 @@ uint16_t batteryMv(const Settings &s) {
   uint32_t sum = 0;
   for (int i = 0; i < 16; i++) sum += analogReadMilliVolts(PIN_BATTERY);
   uint32_t mv = sum / 16 * 2;  // the divider halves the voltage
-  // A LiPo never reads this low. It means the divider or battery isn't connected
-  // (e.g. running on USB only), so report "unknown" rather than "critical".
-  return mv < 2500 ? 0 : (uint16_t)mv;
+  // A LiPo is always between ~3.0 and 4.2 V. Anything far outside that means
+  // the divider isn't fitted (D3 floating) or no battery is connected, so
+  // report "unknown" rather than a made-up voltage.
+  return (mv < 2500 || mv > 4500) ? 0 : (uint16_t)mv;
 }
 
 int batteryPercent(uint16_t mv) {
@@ -46,6 +47,30 @@ bool configSwitchOn() {
     delay(2);
   }
   return low >= 4;
+}
+
+bool buttonDown() {
+  pinMode(PIN_BUTTON, INPUT_PULLUP);
+  int low = 0;
+  for (int i = 0; i < 5; i++) {
+    if (digitalRead(PIN_BUTTON) == LOW) low++;
+    delay(2);
+  }
+  return low >= 4;
+}
+
+bool buttonHeldFor(uint32_t ms) {
+  while (millis() < ms) {
+    if (!buttonDown()) return false;
+    delay(20);
+  }
+  return true;
+}
+
+void releaseWakePins() {
+  for (gpio_num_t pin : {(gpio_num_t)PIN_BUTTON, (gpio_num_t)PIN_CONFIG}) rtc_gpio_deinit(pin);
+  pinMode(PIN_BUTTON, INPUT_PULLUP);
+  pinMode(PIN_CONFIG, INPUT_PULLUP);
 }
 
 void sleepFor(uint32_t seconds) {

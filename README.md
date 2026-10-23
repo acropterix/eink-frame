@@ -75,6 +75,8 @@ Pictures live in the add-on's `/data` folder and are included in Home Assistant 
 
 Flip the **config switch** on. The LED lights and the frame wakes within a second.
 
+**No switch fitted?** Hold the button for **3 seconds** (a short press still means "next picture"). Leave config mode by holding it 3 s again or pressing **Restart** on the page; it also ends by itself after 30 minutes.
+
 - **Where to find the page:**
   - On your home Wi-Fi: **http://eink-frame.local** or its IP address. The Home Assistant panel shows a red banner with a direct link.
   - If the frame can't join your Wi-Fi (new router, wrong password), join its **`EInkFrame-xxxx`** hotspot from a phone (password `einkframe` unless you changed it) and open **http://192.168.4.1**. Most phones pop the page up on their own.

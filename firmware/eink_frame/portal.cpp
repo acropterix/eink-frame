@@ -17,6 +17,7 @@ namespace {
 
 constexpr uint32_t kHeartbeatMs = 60000;
 constexpr uint32_t kSwitchPollMs = 300;
+constexpr uint32_t kButtonConfigMs = 30 * 60 * 1000;
 constexpr const char *kHostname = "eink-frame";
 constexpr const char *kFallbackApPassword = "einkframe";
 
@@ -266,9 +267,9 @@ void handleNotFound() {
 
 namespace portal {
 
-Exit run(Settings &s) {
+Exit run(Settings &s, bool byButton) {
   cfg = &s;
-  Serial.println("[portal] config mode ON");
+  Serial.printf("[portal] config mode ON (%s)\n", byButton ? "button held" : "switch");
 
   WiFi.persistent(false);
   WiFi.mode(WIFI_AP_STA);
@@ -301,6 +302,8 @@ Exit run(Settings &s) {
   net::heartbeat(s, true, mv);
   uint32_t lastBeat = millis(), lastPoll = millis();
   int offReadings = 0;
+  uint32_t started = millis(), heldSince = 0;
+  bool releasedOnce = false;  // ignore the long press that started config mode
   Exit exit = Exit::SwitchOff;
 
   while (true) {
@@ -310,8 +313,19 @@ Exit run(Settings &s) {
 
     if (millis() - lastPoll >= kSwitchPollMs) {
       lastPoll = millis();
-      offReadings = power::configSwitchOn() ? 0 : offReadings + 1;
-      if (offReadings >= 2) break;
+      if (byButton) {
+        bool down = power::buttonDown();
+        if (!down) releasedOnce = true;
+        heldSince = (down && releasedOnce) ? (heldSince ? heldSince : millis()) : 0;
+        if (heldSince && millis() - heldSince >= kLongPressMs) break;
+        if (millis() - started >= kButtonConfigMs) {
+          Serial.println("[portal] 30 minutes up, leaving config mode");
+          break;
+        }
+      } else {
+        offReadings = power::configSwitchOn() ? 0 : offReadings + 1;
+        if (offReadings >= 2) break;
+      }
     }
     if (millis() - lastBeat >= kHeartbeatMs) {
       lastBeat = millis();

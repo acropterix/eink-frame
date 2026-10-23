@@ -61,6 +61,24 @@ void failAndSleep() {
   power::sleepFor(backoffSeconds());
 }
 
+// Why the chip last restarted (not woke from sleep): tells a manual reset
+// apart from a brown-out when the panel's power switches on.
+const char *resetReason() {
+  switch (esp_reset_reason()) {
+    case ESP_RST_POWERON: return "power on";
+    case ESP_RST_EXT: return "reset pin";
+    case ESP_RST_SW: return "software restart";
+    case ESP_RST_PANIC: return "crash";
+    case ESP_RST_INT_WDT:
+    case ESP_RST_TASK_WDT:
+    case ESP_RST_WDT: return "watchdog";
+    case ESP_RST_DEEPSLEEP: return "deep sleep";
+    case ESP_RST_BROWNOUT: return "BROWN-OUT (supply voltage dipped)";
+    case ESP_RST_USB: return "USB (upload or R button)";
+    default: return "other";
+  }
+}
+
 const char *wakeReason() {
   switch (esp_sleep_get_wakeup_cause()) {
     case ESP_SLEEP_WAKEUP_EXT1:
@@ -112,8 +130,10 @@ void setup() {
   settings::loadRemote(rs);
   const char *reason = wakeReason();
   uint16_t batteryMv = power::batteryMv(s);
-  Serial.printf("\n[boot] %s, wake: %s, battery %u mV, settings v%lu, PSRAM %u bytes\n", kFirmwareTag,
-                reason, batteryMv, (unsigned long)s.cfgVersion, (unsigned)ESP.getPsramSize());
+  Serial.printf("\n[boot] %s, wake: %s, reset: %s, battery %u mV, settings v%lu, PSRAM %u bytes\n",
+                kFirmwareTag, reason, resetReason(), batteryMv, (unsigned long)s.cfgVersion,
+                (unsigned)ESP.getPsramSize());
+  if (esp_reset_reason() == ESP_RST_BROWNOUT) noteError("brown-out reset: the supply dipped (panel power-on?)");
 
   if (batteryMv && batteryMv < kCriticalBatteryMv) {
     Serial.println("[boot] battery critical, not doing anything");

@@ -103,7 +103,13 @@ bool busyFloating() {
 // BUSY is LOW while the controller works and HIGH when idle.
 bool waitIdle(const char *stage) {
   uint32_t start = millis();
+  uint32_t lastNote = start;
   while (digitalRead(PIN_EPD_BUSY) == LOW) {
+    if (millis() - lastNote >= 10000) {
+      lastNote = millis();
+      Serial.printf("[epd] still waiting for BUSY at %s (%lu s of 60)\n", stage,
+                    (unsigned long)((lastNote - start) / 1000));
+    }
     if (millis() - start > kBusyTimeoutMs) {
       if (busyFloating()) {
         fail("BUSY wire looks disconnected at %s (HAT BUSY -> D4)", stage);

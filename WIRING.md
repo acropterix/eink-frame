@@ -6,9 +6,8 @@
 - Seeed XIAO ESP32-S3 (headers soldered)
 - Waveshare 13.3" E6 panel + HAT+ driver board, with the panel's ribbon cable plugged into the HAT
 - 3.7 V protected LiPo, 3000 mAh
-- Momentary push button (next picture)
-- SPST toggle switch + 3 mm LED + 1.5 kΩ resistor (config mode)
-- 2 × 1 MΩ resistors + 1 × 100 nF ceramic capacitor (battery voltage reading; optional but recommended)
+- Momentary push button (tap: next picture; hold 3 s: config mode)
+- 2 × 100 kΩ resistors (battery voltage reading; optional)
 - Female–female jumper wires
 
 ## Display: 10 wires
@@ -33,35 +32,23 @@ The HAT+ (E) has **no voltage switch**: it runs on 3.3 V only, so there is nothi
 ```
 D0 (GPIO1) ──── [ button ] ──── GND
 ```
-No resistor is needed; the firmware enables the internal pull-up. Pressing it wakes the frame and skips to the next picture.
+No resistor is needed; the firmware enables the internal pull-up. A tap wakes the frame and skips to the next picture; holding it 3 s opens config mode.
 
-## Config switch and LED
-A small **on/off toggle switch** (SPST) and an LED with a resistor. The LED is wired to the switch itself, so it lights whenever config mode is switched on and uses no extra pin.
-```
-3V3 ──[ 1.5 kΩ ]──▶|── LED ──┐
-                             ├── D9 (GPIO8)
-                             │
-                        [ toggle switch ]
-                             │
-                            GND
-```
-- **Switch off:** D9 is held high by the internal pull-up and the LED is off.
-- **Switch on:** D9 is pulled to GND, which wakes the frame into config mode, and the LED lights (about 1 mA).
-- LED polarity: the longer leg (anode) goes toward the resistor and 3V3; the flat side (cathode) goes toward D9.
-- Use a **red, orange or yellow** LED. Blue and white LEDs need close to 3 V and will be very dim from 3.3 V.
-- The LED stays lit as long as the switch is on, even if the frame has shut down because of a flat battery. That's a useful "you forgot to switch it off" warning.
+Leave the HAT's GND jumper on the GND pin and solder the button's GND wire to the same pin from the underside. **Keep the HAT's VCC and GND jumpers short and direct**, with nothing else spliced into them: long power leads make the panel show only yellow and black.
 
-## Battery voltage (optional, recommended)
+## Config mode: no switch needed
+Hold the button for **3 s** to enter config mode; hold it 3 s again (or press Restart on the page) to leave. It also ends by itself after 30 minutes. A toggle switch from D9 to GND still works as an alternative, but isn't needed.
+
+## Battery voltage (optional)
+Two resistors, no capacitor. Their outer legs share the battery's solder joints, so the only extra work is the middle wire to D3.
 ```
-BAT+ ──[ 1 MΩ ]──┬──[ 1 MΩ ]── GND
-                 │
-                 ├── D3 (GPIO4)
-                 │
-               [100 nF]
-                 │
-                GND
+BAT+ ──[ 100 kΩ ]──┬──[ 100 kΩ ]── BAT− (GND)
+                   │
+                   └── D3 (GPIO4)
 ```
-The divider draws about 2 µA. Without it, set `HAS_BATTERY_DIVIDER 0` in `config.h`; the frame will still work but Home Assistant won't know the battery level.
+- 220 kΩ + 220 kΩ also works. Don't use 1 MΩ without a 100 nF capacitor from D3 to GND: the reading becomes unreliable.
+- Draws about 20 µA (roughly 6% of the battery per year).
+- After fitting it, tick **Battery divider fitted on D3** on the config page. Without it, leave that unticked; the frame works and Home Assistant shows the battery as unknown.
 
 ## Battery
 - Solder a **JST-PH pigtail** (not the battery itself) to the **BAT+ / BAT−** pads on the underside of the XIAO, then plug the battery in. Flux, tin pad and wire separately, tape the wire flat on the pad, touch with the iron for 2 s, then hot-glue for strain relief (pictures in `wiring.html`).
@@ -83,7 +70,7 @@ The divider draws about 2 µA. Without it, set `HAS_BATTERY_DIVIDER 0` in `confi
                                │
    button ── D0 ┌──────────────┴──┐ BAT+/BAT− ── 3000 mAh LiPo
    divider ── D3│ XIAO ESP32-S3   │
-switch+LED ── D9│                 │
+                │                 │
                 └───────┬─────────┘
                      USB-C (charging and flashing)
 ```

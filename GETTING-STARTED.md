@@ -18,11 +18,7 @@ Check what's already in your parts drawer first. Everything here is cheap and wi
 | Part | Qty | Used for | Notes |
 |---|---|---|---|
 | Momentary push button (6×6 mm tactile, or a panel-mount button) | 1 | Next picture | A panel-mount button looks nicer on the frame's side or back. |
-| Mini SPST toggle switch (panel mount) | 1 | Config mode | A small on/off switch you can reach from the back. |
-| 3 mm LED, **red, orange or yellow** | 1 | Config mode light | Blue and white are too dim at 3.3 V. |
-| 1.5 kΩ resistor | 1 | LED | |
-| 1 MΩ resistor | 2 | Battery voltage reading | |
-| 100 nF ceramic capacitor | 1 | Battery voltage reading | |
+| 100 kΩ resistor | 2 | Battery voltage reading (optional) | 220 kΩ also works. No capacitor needed. |
 | Female–female Dupont jumper wires (10 cm) | ~15 | XIAO ↔ HAT | Check whether the HAT comes with a wire harness first. |
 | JST-PH 2.0 2-pin pigtail, female | 1 | Plug-in battery | Lets you unplug the LiPo instead of soldering it straight to the XIAO. Check the polarity. |
 | Heat-shrink tubing | — | Insulating joints | |
@@ -32,7 +28,7 @@ Check what's already in your parts drawer first. Everything here is cheap and wi
 | PETG filament | — | Printed tray and clips | You probably have some already. |
 
 Optional but handy:
-- **Resistor/LED assortment kit:** covers the resistors and LED above, and more.
+- **Resistor assortment kit:** covers the resistors above, and more.
 - **Multimeter:** needed for the battery polarity check and the sleep-current test.
 
 **Don't need:** the Raspberry Pi, PiSugar 3 and Lexar microSD card from the earlier plan. Cancel or return them if you ordered them.
@@ -140,7 +136,7 @@ curl -s "http://192.168.2.10:8200/frame/heartbeat?token=YOUR_TOKEN&config=0"
 Add the "frame offline" automation from `README.md` (section 6) so you hear about it if the frame stops checking in.
 
 ### 5. Plan the build
-- Decide where the **button**, **config switch + LED** and **USB-C charging port** go on the frame. The back or bottom edge works well.
+- Decide where the **button** and **USB-C charging port** go on the frame. The back or bottom edge works well.
 - Measure the shadow box's inside depth and the mat opening. When the panel arrives, send me the measurements of the panel, HAT and XIAO, and I'll design the printed tray and clips for your Core One+.
 
 ---
@@ -151,9 +147,9 @@ Follow this order and test after each step. It makes problems much easier to fin
 
 1. **XIAO alone.** Solder the headers onto one XIAO and keep the other as a spare. Plug it in over USB-C and **Upload**. Open the Serial Monitor (115200 baud) and press RESET. You should see Wi-Fi connect and `[http] status 200`. It ends with a panel `BUSY timeout`, which is expected with no panel attached.
 2. **Panel on USB power.** Wire the HAT following `WIRING.md`. Lock the panel's ribbon cable into the HAT and handle the panel by its edges. Press RESET. The panel flashes for about 20 s and shows a picture.
-3. **Button, then config switch + LED.**
+3. **Button.**
    - Button: press it while the frame sleeps, and it should wake and show the next picture.
-   - Switch: flip it on. The LED lights and the red banner appears in Home Assistant. Open **http://eink-frame.local** and check the battery shows "no divider" or a voltage. Flip it off.
+   - Hold it 3 s: the red config-mode banner appears in Home Assistant. Open **http://eink-frame.local**, then hold it 3 s again to leave.
 4. **Battery divider, then battery.** ⚠️ **Check the LiPo's polarity with a multimeter** before connecting it to the XIAO's BAT+/BAT− pads. Then check that the battery % in Home Assistant looks sensible.
 5. **Sleep current.** With the frame asleep, put the multimeter in series with the battery. Expect well under 0.1 mA. If it's much higher, tell me and we'll switch the HAT's power with a MOSFET.
 6. **Assemble** in the shadow box with the printed tray. Keep the USB-C port reachable for charging.
@@ -167,7 +163,7 @@ Follow this order and test after each step. It makes problems much easier to fin
 |---|---|
 | Home Assistant / add-on | `192.168.2.10`, sidebar **E-Ink Frame** |
 | Frame API | `http://192.168.2.10:8200` |
-| Frame config page (switch on) | `http://eink-frame.local`, or the `EInkFrame-xxxx` hotspot → `http://192.168.4.1` |
+| Frame config page (hold button 3 s) | `http://eink-frame.local`, or the `EInkFrame-xxxx` hotspot → `http://192.168.4.1` |
 | Board settings | XIAO_ESP32S3, **OPI PSRAM**, USB CDC On Boot enabled |
 | Re-flash over USB | Hold BOOT, tap RESET, release BOOT, Upload |
 | Firmware for remote update | Sketch → Export Compiled Binary → `eink_frame.ino.bin` (bump `FW_VERSION` first) |

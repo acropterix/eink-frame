@@ -65,9 +65,9 @@ ol{margin:6px 0;padding-left:22px}
     <text x="590" y="92" fill="var(--pcbtext)" font-weight="600">XIAO</text>
     <text x="590" y="110" fill="var(--pcbtext)" font-size="12">ESP32-S3</text>
     <rect x="720" y="15" width="170" height="44" rx="8" fill="var(--hub)" stroke="var(--hubline)"/>
-    <text x="805" y="42" fill="var(--text)" font-size="13">button · switch + LED</text>
+    <text x="805" y="42" fill="var(--text)" font-size="13">push button</text>
     <rect x="720" y="73" width="170" height="44" rx="8" fill="var(--hub)" stroke="var(--hubline)"/>
-    <text x="805" y="100" fill="var(--text)" font-size="13">battery divider</text>
+    <text x="805" y="100" fill="var(--text)" font-size="13">battery reading (optional)</text>
     <rect x="720" y="131" width="170" height="44" rx="8" fill="var(--hub)" stroke="var(--hubline)"/>
     <text x="805" y="158" fill="var(--text)" font-size="13">3000 mAh LiPo</text>
   </g>
@@ -143,41 +143,27 @@ ol{margin:6px 0;padding-left:22px}
 </div>
 </div>
 <div class="note warn">⚠️ Before plugging in USB: follow each wire from its <b>printed label on the HAT</b> to the XIAO pin — go by the label, not the colour. Red must sit under <b>VCC</b> and go to <b>3V3</b>; black under <b>GND</b> to <b>GND</b>. Then power up and touch both boards after 10 s — anything hot, unplug.</div>
+<div class="note warn">⚡ Keep the <b>VCC and GND</b> jumpers short and direct (≈10 cm or less), XIAO straight to HAT. The panel draws current in bursts; long or shared power leads make it show <b>only yellow and black</b>.</div>
 <div class="note ok">Test now: USB-C into the Mac, press <b>R</b> on the XIAO. The panel flickers for ~20 s and shows a picture.</div>
 </section>
 
 <!-- ============ STEP 3 ============ -->
 <section>
-<h2><span class="step">3</span>Button, config switch + LED, battery reading</h2>
-<p>Several parts need <b>3V3</b> and <b>GND</b>, but the XIAO has one of each. Make a tiny <b>hub</b>: a strip of perfboard with two rows of male header pins, each row soldered together. Move the HAT's red/black (VCC/GND) jumpers from the XIAO onto the hub.</p>
-<svg id="extras" viewBox="0 0 900 620" role="img" aria-label="Button, switch, LED and battery divider wiring"></svg>
-<div class="grid2">
-<svg viewBox="0 0 420 150" role="img" aria-label="LED legs">
-  <g transform="translate(40 20)">
-    <path d="M30 20 a22 22 0 0 1 44 0 v40 h-44z" fill="#e53935" opacity=".85" stroke="var(--edge)"/>
-    <path d="M74 30 v30" stroke="var(--edge)" stroke-width="3"/>
-    <path d="M42 60 v70" stroke="var(--edge)" stroke-width="3"/><path d="M62 60 v50" stroke="var(--edge)" stroke-width="3"/>
-    <text x="0" y="128" font-size="13" fill="var(--text)">long leg</text>
-    <text x="74" y="118" font-size="13" fill="var(--text)">short leg, flat side</text>
-    <text x="130" y="30" font-size="14" fill="var(--text)"><tspan font-weight="700">Long leg</tspan> → 1.5 kΩ → 3V3 row</text>
-    <text x="130" y="56" font-size="14" fill="var(--text)"><tspan font-weight="700">Short leg</tspan> → D9 node</text>
-    <text x="130" y="84" font-size="13" fill="var(--muted)">Red, orange or yellow LED only</text>
-  </g>
-</svg>
-<div class="small">
-<ol>
-<li><b>Button:</b> D0 → button → GND row. No resistor.</li>
-<li><b>Switch:</b> D9 → switch → GND row. ON = config mode, LED lights.</li>
-<li><b>Battery reading:</b> two 1 MΩ in series from BAT+ to GND; middle → D3; 100 nF from D3 to GND.</li>
+<h2><span class="step">3</span>The push button</h2>
+<p>One button does everything: <b>short press</b> = next picture, <b>hold 3 s</b> = config mode (hold 3 s again, or press Restart on the page, to leave; it also ends by itself after 30 min). No switch, LED or resistor needed.</p>
+<svg id="extras" viewBox="0 0 900 380" role="img" aria-label="Push button wiring from D0 to GND"></svg>
+<ol class="small">
+<li>One button leg → <b>D0</b> (left side, 1st pin from the top). No resistor: the firmware turns on the pull-up.</li>
+<li>Other leg → <b>GND</b>. Leave the HAT's GND jumper where it is and solder the button's wire to the <b>same GND pin from the underside</b> of the XIAO.</li>
+<li>Keep the button leads short too, and never route them through the HAT's power wires.</li>
 </ol>
-</div>
-</div>
+<p class="small">Optional: a toggle switch from D9 to GND still works as a config-mode switch, but you don't need it.</p>
 </section>
 
 <!-- ============ STEP 4 ============ -->
 <section>
-<h2><span class="step">4</span>Battery (XIAO underside)</h2>
-<svg id="battery" viewBox="0 0 900 330" role="img" aria-label="Battery pads on underside"></svg>
+<h2><span class="step">4</span>Battery and battery reading (XIAO underside)</h2>
+<svg id="battery" viewBox="0 0 900 365" role="img" aria-label="Battery pads on underside"></svg>
 <div class="note warn">⚠️ Check the battery plug with a multimeter first: red probe on the wire you'll solder to BAT+ must read +3.7 V. Reversed = dead XIAO.</div>
 <h3 style="font-size:16px;margin:14px 0 6px">The easy way to solder the tiny pads</h3>
 <svg viewBox="0 0 900 170" role="img" aria-label="Four soldering steps">
@@ -213,6 +199,15 @@ ol{margin:6px 0;padding-left:22px}
 <li>Tape the wire so its tinned tip <b>lies flat on the pad</b> by itself. Touch the iron on top for 2 s — the two blobs melt together. No third hand needed.</li>
 <li>Tug gently, check no bridge between pads, then cover with a dab of <b>hot glue or Kapton</b> so the wires can't flex at the joint.</li>
 </ol>
+<h3 style="font-size:16px;margin:14px 0 6px">Battery reading: two resistors, no capacitor (optional)</h3>
+<p class="small" style="margin:0 0 6px">Lets Home Assistant show the battery %. Skip it and the frame still works; the battery just shows "unknown".</p>
+<ol class="small">
+<li>Take two <b>100 kΩ</b> resistors (220 kΩ also works). Twist one leg of each together and solder: that's the <b>middle</b>. Slide heat-shrink over it.</li>
+<li>Do this <b>while</b> soldering the battery pigtail: put the free leg of one resistor into the <b>BAT+</b> joint with the red wire, and the other into the <b>BAT−</b> joint with the black wire. No extra pads to hit.</li>
+<li>Run a short wire from the middle to <b>D3</b> (left side, 4th pin from the top when the XIAO is face-up). Easiest: cut a female jumper in half, solder it to the middle, push it onto D3.</li>
+<li>Hold the button 3 s → <b>http://eink-frame.local</b> → tick <b>Battery divider fitted on D3</b> → Save.</li>
+</ol>
+<p class="small">It draws about 20 µA, roughly 6% of the battery per year. Don't use 1 MΩ resistors without the capacitor: the reading becomes unreliable.</p>
 </section>
 
 <!-- ============ DEBUG ============ -->
@@ -249,7 +244,7 @@ ol{margin:6px 0;padding-left:22px}
 </svg>
 
 <h3 style="font-size:16px;margin:16px 0 4px">Run "Colour test" on the config page, then match what you see</h3>
-<p class="small" style="margin:0 0 8px">Config switch on (or hold the button 3 s) → <b>http://eink-frame.local</b> → <b>Colour test</b>. The left half comes from <b>CS_M</b>, the right half from <b>CS_S</b>.</p>
+<p class="small" style="margin:0 0 8px">Hold the button 3 s → <b>http://eink-frame.local</b> → <b>Colour test</b>. The left half comes from <b>CS_M</b>, the right half from <b>CS_S</b>.</p>
 <svg id="testcases" viewBox="0 0 900 300" role="img" aria-label="Colour test outcomes"></svg>
 </section>
 
@@ -269,7 +264,8 @@ const HAT = ['PWR','BUSY','RST','DC','CS_S','CS_M','SCLK','DIN','GND','VCC'];
 const MAP = {PWR:'D5',BUSY:'D4',RST:'D7',DC:'D2',CS_S:'D6',CS_M:'D1',SCLK:'D8',DIN:'D10',GND:'GND',VCC:'3V3'};
 const DEFAULT = {VCC:'red',GND:'black',DIN:'blue',SCLK:'yellow',CS_M:'orange',CS_S:'green',DC:'white',RST:'purple',BUSY:'brown',PWR:'grey'};
 const LEFT = ['D0','D1','D2','D3','D4','D5','D6'], RIGHT = ['5V','GND','3V3','D10','D9','D8','D7'];
-const OTHER = {D0:'button',D3:'battery',D9:'switch','5V':'unused'};
+const OTHER = {D0:'button',D3:'battery',D9:'unused','5V':'unused'};
+const OTHER_STEP = {D0:3, D3:4};
 let col = {...DEFAULT};
 try{ const s = JSON.parse(localStorage.getItem('wireColors2')||'null'); if(s) col = {...col, ...s}; }catch(e){}
 
@@ -346,66 +342,23 @@ function drawMain(){
 
 function drawExtras(){
   const svg=document.getElementById('extras'); svg.innerHTML='';
-  const P = xiao(svg, 360, 150);
+  const P = xiao(svg, 380, 60);
   const g=el(svg,'g',{});
-  // hub rails
-  el(svg,'rect',{x:40,y:540,width:820,height:34,rx:6,fill:'var(--hub)',stroke:'var(--hubline)'});
-  el(svg,'text',{x:52,y:562,'font-size':13,'font-weight':700,fill:'var(--text)'},'HUB · GND row');
-  el(svg,'rect',{x:520,y:40,width:340,height:34,rx:6,fill:'var(--hub)',stroke:'var(--hubline)'});
-  el(svg,'text',{x:532,y:62,'font-size':13,'font-weight':700,fill:'var(--text)'},'HUB · 3V3 row');
-  for(let x=180;x<=840;x+=20) el(svg,'circle',{cx:x,cy:557,r:3,fill:'var(--hubline)'});
-  for(let x=660;x<=840;x+=20) el(svg,'circle',{cx:x,cy:57,r:3,fill:'var(--hubline)'});
-  const K='#3d7a4f', R='#d93025', B='#1b1b1b';
-  // XIAO GND -> GND row ; XIAO 3V3 -> 3V3 row
-  wire(g,[[P.GND[0],P.GND[1]],[528,P.GND[1]],[528,557]],B,4);
-  wire(g,[[P['3V3'][0],P['3V3'][1]],[548,P['3V3'][1]],[548,57]],R,4);
-  // HAT VCC/GND jumpers onto the hub
-  wire(g,[[860,100],[820,100],[820,57]],COLORS[col.VCC],4); el(svg,'text',{x:866,y:104,'font-size':12,fill:'var(--muted)'},'HAT');
-  el(svg,'text',{x:866,y:118,'font-size':12,fill:'var(--muted)'},'VCC');
-  wire(g,[[860,500],[820,500],[820,557]],COLORS[col.GND],4); el(svg,'text',{x:866,y:504,'font-size':12,fill:'var(--muted)'},'HAT');
-  el(svg,'text',{x:866,y:518,'font-size':12,'fill':'var(--muted)'},'GND');
-  // Button on D0
-  wire(g,[[P.D0[0],P.D0[1]],[90,P.D0[1]],[90,557]],K,4);
-  el(svg,'rect',{x:70,y:330,width:40,height:40,rx:4,fill:'var(--card)',stroke:'var(--edge)','stroke-width':2});
-  el(svg,'circle',{cx:90,cy:350,r:11,fill:'#555'});
-  el(svg,'text',{x:118,y:345,'font-size':14,'font-weight':700,fill:'var(--text)'},'button');
-  el(svg,'text',{x:118,y:362,'font-size':12,fill:'var(--muted)'},'next picture');
-  // Divider on D3
-  const y3=P.D3[1];
-  wire(g,[[P.D3[0],y3],[250,y3],[250,557]],K,4);
-  wire(g,[[250,y3],[150,y3]],K,4);
-  el(svg,'circle',{cx:250,cy:y3,r:5,fill:'var(--text)'});
-  el(svg,'rect',{x:168,y:y3-11,width:58,height:22,rx:3,fill:'#e8d9b0',stroke:'var(--edge)'});
-  el(svg,'text',{x:197,y:y3+5,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#111'},'1 MΩ');
-  el(svg,'text',{x:146,y:y3-10,'text-anchor':'end','font-size':13,'font-weight':700,fill:'var(--warn)'},'to BAT+');
-  el(svg,'text',{x:146,y:y3+8,'text-anchor':'end','font-size':12,fill:'var(--muted)'},'(step 4)');
-  el(svg,'rect',{x:239,y:400,width:22,height:58,rx:3,fill:'#e8d9b0',stroke:'var(--edge)'});
-  el(svg,'text',{x:0,y:0,transform:'translate(254 429) rotate(-90)','text-anchor':'middle','font-size':12,'font-weight':700,fill:'#111'},'1 MΩ');
-  wire(g,[[300,y3],[300,557]],K,4);
-  el(svg,'circle',{cx:300,cy:y3,r:5,fill:'var(--text)'});
-  el(svg,'rect',{x:286,y:420,width:28,height:6,fill:'var(--text)'});
-  el(svg,'rect',{x:286,y:432,width:28,height:6,fill:'var(--text)'});
-  el(svg,'rect',{x:283,y:426,width:34,height:6,fill:'var(--halo)'});
-  el(svg,'text',{x:322,y:435,'font-size':12,'font-weight':700,fill:'var(--text)'},'100 nF');
-  // Config switch + LED on D9
-  const y9=P.D9[1];
-  wire(g,[[P.D9[0],y9],[700,y9]],K,4);
-  wire(g,[[700,57],[700,557]],K,4);
-  el(svg,'circle',{cx:700,cy:y9,r:5,fill:'var(--text)'});
-  // resistor 1.5k
-  el(svg,'rect',{x:689,y:110,width:22,height:58,rx:3,fill:'#e8d9b0',stroke:'var(--edge)'});
-  el(svg,'text',{x:0,y:0,transform:'translate(704 139) rotate(-90)','text-anchor':'middle','font-size':11,'font-weight':700,fill:'#111'},'1.5 kΩ');
-  // LED symbol (pointing down: anode top)
-  el(svg,'path',{d:'M684 200 L716 200 L700 226 Z',fill:'#e53935',stroke:'var(--edge)'});
-  el(svg,'rect',{x:684,y:226,width:32,height:4,fill:'var(--edge)'});
-  el(svg,'path',{d:'M722 205 l14 -10 M726 216 l14 -10',stroke:'#e53935','stroke-width':2.5});
-  el(svg,'text',{x:744,y:212,'font-size':14,'font-weight':700,fill:'var(--text)'},'LED');
-  el(svg,'text',{x:744,y:228,'font-size':12,fill:'var(--muted)'},'long leg up');
-  // switch
-  el(svg,'rect',{x:678,y:400,width:44,height:60,rx:6,fill:'var(--card)',stroke:'var(--edge)','stroke-width':2});
-  el(svg,'path',{d:'M700 440 L716 410',stroke:'var(--text)','stroke-width':4,'stroke-linecap':'round'});
-  el(svg,'text',{x:730,y:425,'font-size':14,'font-weight':700,fill:'var(--text)'},'toggle switch');
-  el(svg,'text',{x:730,y:442,'font-size':12,fill:'var(--muted)'},'ON = config mode');
+  const K='#3d7a4f';
+  // HAT power jumpers stay on 3V3 / GND: short
+  wire(g,[[P['3V3'][0],P['3V3'][1]],[700,P['3V3'][1]]],COLORS[col.VCC],4);
+  wire(g,[[P.GND[0],P.GND[1]],[700,P.GND[1]]],COLORS[col.GND],4);
+  el(svg,'text',{x:710,y:P.GND[1]-2,'font-size':13,'font-weight':700,fill:'var(--text)'},'to HAT GND, VCC');
+  el(svg,'text',{x:710,y:P.GND[1]+14,'font-size':12,fill:'var(--warn)'},'keep short, nothing else on them');
+  // button
+  wire(g,[[P.D0[0],P.D0[1]],[90,P.D0[1]],[90,335],[620,335],[620,P.GND[1]+8],[P.GND[0]+2,P.GND[1]+8]],K,4);
+  el(svg,'rect',{x:68,y:190,width:44,height:44,rx:5,fill:'var(--card)',stroke:'var(--edge)','stroke-width':2});
+  el(svg,'circle',{cx:90,cy:212,r:12,fill:'#555'});
+  el(svg,'text',{x:126,y:205,'font-size':15,'font-weight':700,fill:'var(--text)'},'button');
+  el(svg,'text',{x:126,y:222,'font-size':12,fill:'var(--muted)'},'tap = next picture');
+  el(svg,'text',{x:126,y:238,'font-size':12,fill:'var(--muted)'},'hold 3 s = config mode');
+  el(svg,'text',{x:630,y:300,'font-size':12,fill:'var(--muted)'},'soldered under the GND pin');
+  el(svg,'text',{x:630,y:316,'font-size':12,fill:'var(--muted)'},'(underside of the XIAO)');
 }
 
 function drawBattery(){
@@ -415,25 +368,37 @@ function drawBattery(){
   el(svg,'rect',{x,y,width:140,height:230,rx:10,fill:'#1b4d2e'});
   el(svg,'text',{x:x+70,y:y+60,'text-anchor':'middle','font-size':13,fill:'#d6e9dc'},'XIAO UNDERSIDE');
   el(svg,'text',{x:x+70,y:y+78,'text-anchor':'middle','font-size':11,fill:'#a9c7b4'},'(flipped over)');
-  el(svg,'rect',{x:x+30,y:y+170,width:30,height:18,rx:3,fill:'#d4af37',stroke:'#7a5e10'});
-  el(svg,'rect',{x:x+80,y:y+170,width:30,height:18,rx:3,fill:'#d4af37',stroke:'#7a5e10'});
-  el(svg,'text',{x:x+45,y:y+164,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#fff'},'BAT+');
-  el(svg,'text',{x:x+95,y:y+164,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#fff'},'BAT−');
+  const px=x+45, nx=x+95, py=y+179;  // pad centres
+  el(svg,'rect',{x:px-15,y:py-9,width:30,height:18,rx:3,fill:'#d4af37',stroke:'#7a5e10'});
+  el(svg,'rect',{x:nx-15,y:py-9,width:30,height:18,rx:3,fill:'#d4af37',stroke:'#7a5e10'});
+  el(svg,'text',{x:px-4,y:py-16,'font-size':12,'font-weight':700,fill:'#fff'},'BAT+');
+  el(svg,'text',{x:nx,y:py-16,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#fff'},'BAT−');
   const g=el(svg,'g',{});
-  // JST socket (pigtail) between battery and pads
-  wire(g,[[x+45,y+179],[x+45,280],[300,280],[300,150]],'#d93025',5);
-  wire(g,[[x+95,y+179],[x+95,300],[120,300],[120,150]],'#1b1b1b',5);
+  // pigtail to the battery
+  wire(g,[[px,py],[px,300],[300,300],[300,150]],'#d93025',5);
+  wire(g,[[nx,py],[nx,318],[120,318],[120,150]],'#1b1b1b',5);
   el(svg,'rect',{x:90,y:40,width:250,height:110,rx:10,fill:'#c7d3dc',stroke:'var(--edge)'});
   el(svg,'text',{x:215,y:90,'text-anchor':'middle','font-size':15,'font-weight':700,fill:'#111'},'3.7 V LiPo');
   el(svg,'text',{x:215,y:110,'text-anchor':'middle','font-size':12,fill:'#333'},'3000 mAh · plugs into JST pigtail');
-  el(svg,'text',{x:110,y:170,'text-anchor':'end','font-size':12,fill:'var(--muted)'},'− black');
-  el(svg,'text',{x:310,y:170,'font-size':12,fill:'var(--muted)'},'+ red');
-  // divider top joins the + wire
-  el(svg,'circle',{cx:400,cy:280,r:6,fill:'var(--text)'});
-  wire(g,[[400,280],[400,215]],'#3d7a4f',4);
-  el(svg,'text',{x:410,y:212,'font-size':13,'font-weight':700,fill:'var(--warn)'},'1 MΩ "to BAT+"');
-  el(svg,'text',{x:410,y:228,'font-size':12,fill:'var(--muted)'},'from step 3');
-  el(svg,'text',{x:x+70,y:y+120,'text-anchor':'middle','font-size':11,fill:'#a9c7b4'},'go by the printed labels');
+  el(svg,'text',{x:112,y:170,'text-anchor':'end','font-size':12,fill:'var(--muted)'},'− black');
+  el(svg,'text',{x:308,y:170,'font-size':12,fill:'var(--muted)'},'+ red');
+  // divider: resistor legs share the pad joints, middle goes to D3
+  const K='#3d7a4f', jx=790, jy=180;
+  wire(g,[[px-11,py],[px-11,y+100],[jx,y+100],[jx,120]],K,3);
+  wire(g,[[jx,145],[jx,jy]],K,3);
+  wire(g,[[jx,jy],[jx,215]],K,3);
+  wire(g,[[jx,262],[jx,285],[nx+8,285],[nx+8,py]],K,3);
+  el(svg,'rect',{x:jx-11,y:120,width:22,height:50,rx:3,fill:'#e8d9b0',stroke:'var(--edge)'});
+  el(svg,'rect',{x:jx-11,y:212,width:22,height:50,rx:3,fill:'#e8d9b0',stroke:'var(--edge)'});
+  el(svg,'text',{x:0,y:0,transform:`translate(${jx+4} 145) rotate(-90)`,'text-anchor':'middle','font-size':10,'font-weight':700,fill:'#111'},'100 kΩ');
+  el(svg,'text',{x:0,y:0,transform:`translate(${jx+4} 237) rotate(-90)`,'text-anchor':'middle','font-size':10,'font-weight':700,fill:'#111'},'100 kΩ');
+  el(svg,'circle',{cx:jx,cy:192,r:6,fill:'var(--text)'});
+  wire(g,[[jx,192],[860,192]],'#1f6fd1',3);
+  el(svg,'text',{x:866,y:188,'font-size':13,'font-weight':700,fill:'var(--text)'},'D3');
+  el(svg,'text',{x:866,y:204,'font-size':11,fill:'var(--muted)'},'pin');
+  el(svg,'text',{x:jx-18,y:205,'text-anchor':'end','font-size':11,fill:'var(--muted)'},'middle');
+  el(svg,'text',{x:700,y:338,'font-size':12,fill:'var(--muted)'},'resistor legs share the battery');
+  el(svg,'text',{x:700,y:354,'font-size':12,fill:'var(--muted)'},'wire joints; pads are labelled');
 }
 
 function drawGpio(){
@@ -468,7 +433,7 @@ function tables(){
     try{ localStorage.setItem('wireColors2', JSON.stringify(col)); }catch(e){} render(); });
   const wb=document.querySelector('#where tbody'); wb.innerHTML='';
   const rows=[...LEFT,...RIGHT].map(p=>{ const sig=Object.keys(MAP).find(k=>MAP[k]===p);
-    return `<tr><td><b>${p}</b></td><td class="pos">${position(p)}</td><td>${sig?`<span class="sw" style="background:${COLORS[col[sig]]}"></span>${sig}`:`<span class="small">${OTHER[p]}${OTHER[p]==='unused'?'':' (step 3)'}</span>`}</td></tr>`; });
+    return `<tr><td><b>${p}</b></td><td class="pos">${position(p)}</td><td>${sig?`<span class="sw" style="background:${COLORS[col[sig]]}"></span>${sig}`:`<span class="small">${OTHER[p]}${OTHER_STEP[p]?` (step ${OTHER_STEP[p]})`:''}</span>`}</td></tr>`; });
   wb.innerHTML=rows.join('');
 }
 function drawTests(){

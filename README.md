@@ -5,7 +5,7 @@ A battery-powered 13.3" colour e-ink picture frame that gets its pictures from H
 - **Home Assistant add-on** (`eink_frame/`): an upload page and a 6-colour drawing pad in the HA sidebar. It converts each picture into the panel's format once, at upload, manages the slideshow, and shows the frame's battery in Home Assistant.
 - **Firmware** (`firmware/eink_frame`) for a Seeed XIAO ESP32-S3: wake → download → refresh → deep sleep. It has no image logic of its own.
 - **Remote updates:** change the frame's Wi-Fi and server settings, or install new firmware, from the Home Assistant panel. If new settings don't work, the frame rolls back to its previous ones automatically.
-- **Config mode** (toggle switch + LED on the frame): the frame stays awake and serves its own setup page, where you can change Wi-Fi and server settings, push a picture, or update the firmware without a USB cable.
+- **Config mode** (hold the button 3 s): the frame stays awake and serves its own setup page, where you can change Wi-Fi and server settings, push a picture, or update the firmware without a USB cable.
 - **Wiring**: see [wiring.html](wiring.html) (pictures) and [WIRING.md](WIRING.md). **Debugging**: [DEBUGGING.md](DEBUGGING.md).
 
 ### Repository layout
@@ -73,9 +73,7 @@ Pictures live in the add-on's `/data` folder and are included in Home Assistant 
 
 ## 4. Config mode
 
-Flip the **config switch** on. The LED lights and the frame wakes within a second.
-
-**No switch fitted?** Hold the button for **3 seconds** (a short press still means "next picture"). Leave config mode by holding it 3 s again or pressing **Restart** on the page; it also ends by itself after 30 minutes.
+Hold the button for **3 seconds** (a short press still means "next picture"). Leave config mode by holding it 3 s again or pressing **Restart** on the page; it also ends by itself after 30 minutes. (An optional toggle switch from D9 to GND also works: on = config mode.)
 
 - **Where to find the page:**
   - On your home Wi-Fi: **http://eink-frame.local** or its IP address. The Home Assistant panel shows a red banner with a direct link.
@@ -90,10 +88,10 @@ Flip the **config switch** on. The LED lights and the frame wakes within a secon
   - A **notification** with the link.
   - `binary_sensor.eink_frame_config_mode` turns on.
   - The frame checks in every minute. If those check-ins stop, the banner says so.
-- **Battery:** config mode keeps Wi-Fi running, which drains a full battery in **roughly a day**. If the battery gets critically low, the frame leaves config mode and shuts down, even with the switch still on. The LED stays lit as a reminder.
+- **Battery:** config mode keeps Wi-Fi running, which drains a full battery in **roughly a day**. If the battery gets critically low, the frame leaves config mode and shuts down, even if you haven't left it.
 - **Switch it off:** the frame tells the server, does a normal check-in with the new settings, and goes back to sleep.
 
-The config page has no login of its own; it relies on the physical switch and the hotspot password. Only leave config mode on while you're using it.
+The config page has no login of its own; it relies on physical access to the button and the hotspot password. Only leave config mode on while you're using it.
 
 ## 5. Changing settings and firmware from Home Assistant
 

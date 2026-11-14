@@ -179,13 +179,18 @@ body[data-board="xiao"] [data-board="feather"], body[data-board="feather"] [data
 <h2><span class="step">4</span>Battery</h2>
 <div data-board="feather">
 <svg id="batteryF" viewBox="0 0 900 330" role="img" aria-label="Battery plugs into the Feather's JST socket"></svg>
-<div class="note ok">✅ <b>No soldering.</b> The battery plugs into the Feather's socket, charges whenever USB-C is connected (the <b>CHG</b> light is on while charging), and the battery reading is built in.</div>
+<div class="note ok">✅ <b>No soldering, no resistors.</b> The battery plugs into the Feather's socket and charges whenever USB-C is connected (the <b>CHG</b> light is on while charging). The battery-level reading is <b>already on the board</b>: two 200 kΩ resistors feeding GPIO35, which the firmware reads by itself. Don't add the two-resistor bridge from the XIAO build.</div>
+
+<h3 style="font-size:16px;margin:14px 0 6px">The two connectors and the adapter</h3>
+<svg id="plugsF" viewBox="0 0 900 300" role="img" aria-label="1.25 mm battery plug, adapter, and 2.0 mm PH socket with polarity"></svg>
 <ol class="small">
-<li><b>Adapter:</b> your battery has a <b>1.25 mm</b> plug; the Feather's socket is <b>2.0 mm JST-PH</b>. Use a short "JST PH 2.0 to 1.25" adapter (or an Adafruit LiPo, which plugs straight in).</li>
-<li><b>Check polarity before plugging in.</b> Battery + adapter together, multimeter on the adapter's PH plug: the pin that will land on the <b>+</b> printed next to the Feather's socket must read <b>+3.7 V</b>. If it reads −3.7 V, don't use that adapter.</li>
-<li>Plug in. Keep the battery leads short and away from the panel ribbon.</li>
-<li>Battery %: nothing to wire. It's read from the Feather's built-in monitor and shows in Home Assistant at the next check-in.</li>
+<li><b>Get an adapter:</b> search "JST PH 2.0 male to 1.25 female" (sometimes listed as "PH2.0 to MX1.25" or "Molex PicoBlade"). Short is best. Or use an Adafruit LiPo, which plugs straight in.</li>
+<li><b>Check polarity before it touches the Feather</b> (adapters and batteries aren't always wired the same way): plug battery into adapter, then put the multimeter on the adapter's PH 2.0 plug. Hold the plug the way it will go in. The pin that will sit next to the <b>+</b> printed by the Feather's socket must read <b>+3.7 V</b> (red probe on it, black on the other).</li>
+<li>Reads <b>−3.7 V</b>? The adapter is reversed. Don't plug it in: get another, or swap its two pins (lift the tiny tab on the housing with a pin and swap the wires).</li>
+<li>Plug in. Keep the leads short and away from the panel ribbon.</li>
+<li>Battery % appears in Home Assistant at the next check-in. Nothing to set: on the Feather the "battery reading fitted" setting is on by default.</li>
 </ol>
+<p class="small"><b>No adapter to hand?</b> Don't cut the battery's own leads (a slip shorts the cell). Instead join a 1.25 mm socket pigtail to a PH 2.0 plug pigtail, red to red and black to black, with solder and heat-shrink. That's wire-to-wire, nowhere near the board.</p>
 </div>
 <div data-board="xiao">
 <svg id="battery" viewBox="0 0 900 365" role="img" aria-label="Battery pads on underside"></svg>
@@ -500,6 +505,10 @@ function drawBatteryFeather(){
   el(svg,'rect',{x:sx+8,y:sy+34,width:10,height:10,fill:'#bbb'});
   el(svg,'text',{x:sx+42,y:sy+44,'font-size':16,'font-weight':700,fill:'var(--pcbtext)'},'+');
   el(svg,'text',{x:sx+42,y:sy+18,'font-size':16,'font-weight':700,fill:'var(--pcbtext)'},'−');
+  el(svg,'rect',{x:x+12,y:y+110,width:W-24,height:64,rx:6,fill:'none',stroke:'#7fbf96','stroke-dasharray':'4 3'});
+  el(svg,'text',{x:x+W/2,y:y+130,'text-anchor':'middle','font-size':10,'font-weight':700,fill:'#9fd4b2'},'built-in battery reading');
+  el(svg,'text',{x:x+W/2,y:y+147,'text-anchor':'middle','font-size':10,fill:'#c9e6d3'},'2 × 200 kΩ → GPIO35');
+  el(svg,'text',{x:x+W/2,y:y+163,'text-anchor':'middle','font-size':10,fill:'#c9e6d3'},'nothing to add');
   el(svg,'text',{x:x+W/2,y:y+200,'text-anchor':'middle','font-size':12,fill:'var(--pcbtext)'},'Feather ESP32 V2');
   el(svg,'text',{x:x+W/2,y:y+218,'text-anchor':'middle','font-size':11,fill:'#a9adb3'},'(top part shown)');
   const g=el(svg,'g',{});
@@ -515,6 +524,46 @@ function drawBatteryFeather(){
   wire(g,[[440,205],[500,205],[500,sy+39],[sx+13,sy+39]],'#d93025',4);
   el(svg,'text',{x:385,y:250,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'var(--warn)'},'check: red must reach +');
   el(svg,'text',{x:385,y:266,'text-anchor':'middle','font-size':11,fill:'var(--muted)'},'go by the + printed on the board');
+}
+
+function drawPlugsF(){
+  const svg=document.getElementById('plugsF'); if(!svg) return; svg.innerHTML='';
+  const g=el(svg,'g',{});
+  // 1.25 mm plug on the battery (small)
+  el(svg,'text',{x:110,y:30,'text-anchor':'middle','font-size':13,'font-weight':700,fill:'var(--text)'},'Battery plug');
+  el(svg,'text',{x:110,y:47,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},'1.25 mm (MX1.25 / PicoBlade)');
+  wire(g,[[30,110],[80,110]],'#d93025',4); wire(g,[[30,130],[80,130]],'#1b1b1b',4);
+  el(svg,'rect',{x:80,y:98,width:46,height:44,rx:3,fill:'#f1ede4',stroke:'#999'});
+  el(svg,'circle',{cx:118,cy:110,r:3,fill:'#bbb'}); el(svg,'circle',{cx:118,cy:130,r:3,fill:'#bbb'});
+  el(svg,'text',{x:110,y:170,'text-anchor':'middle','font-size':11,fill:'var(--muted)'},'pins 1.25 mm apart');
+  el(svg,'text',{x:110,y:186,'text-anchor':'middle','font-size':11,fill:'var(--muted)'},'(tiny)');
+  // adapter
+  el(svg,'text',{x:400,y:30,'text-anchor':'middle','font-size':13,'font-weight':700,fill:'var(--text)'},'Adapter cable');
+  el(svg,'text',{x:400,y:47,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},'1.25 female  ↔  PH 2.0 male');
+  el(svg,'rect',{x:250,y:96,width:50,height:48,rx:3,fill:'#f1ede4',stroke:'#999'});
+  el(svg,'text',{x:275,y:160,'text-anchor':'middle','font-size':11,fill:'var(--muted)'},'1.25 socket');
+  wire(g,[[300,110],[490,110]],'#d93025',4); wire(g,[[300,130],[490,130]],'#1b1b1b',4);
+  el(svg,'rect',{x:490,y:92,width:62,height:56,rx:3,fill:'#f1ede4',stroke:'#999'});
+  el(svg,'text',{x:521,y:164,'text-anchor':'middle','font-size':11,fill:'var(--muted)'},'PH 2.0 plug');
+  // arrows
+  el(svg,'path',{d:'M150 120 h80',stroke:'var(--muted)','stroke-width':2,'stroke-dasharray':'5 4',fill:'none'});
+  el(svg,'path',{d:'M232 120 l-8 -5 v10 z',fill:'var(--muted)'});
+  el(svg,'path',{d:'M575 120 h80',stroke:'var(--muted)','stroke-width':2,'stroke-dasharray':'5 4',fill:'none'});
+  el(svg,'path',{d:'M657 120 l-8 -5 v10 z',fill:'var(--muted)'});
+  // Feather socket
+  el(svg,'text',{x:770,y:30,'text-anchor':'middle','font-size':13,'font-weight':700,fill:'var(--text)'},'Feather socket');
+  el(svg,'text',{x:770,y:47,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},'2.0 mm JST-PH');
+  el(svg,'rect',{x:670,y:70,width:200,height:110,rx:10,fill:'var(--pcb)'});
+  el(svg,'rect',{x:742,y:86,width:46,height:70,rx:3,fill:'#f1ede4',stroke:'#999'});
+  el(svg,'rect',{x:756,y:96,width:12,height:12,fill:'#bbb'}); el(svg,'rect',{x:756,y:134,width:12,height:12,fill:'#bbb'});
+  el(svg,'text',{x:800,y:108,'font-size':18,'font-weight':700,fill:'var(--pcbtext)'},'−');
+  el(svg,'text',{x:800,y:148,'font-size':18,'font-weight':700,fill:'var(--pcbtext)'},'+');
+  el(svg,'text',{x:770,y:198,'text-anchor':'middle','font-size':11,fill:'var(--muted)'},'+ / − printed on the board');
+  // polarity check
+  el(svg,'rect',{x:300,y:212,width:300,height:72,rx:10,fill:'var(--warnbg)',stroke:'var(--warn)'});
+  el(svg,'text',{x:450,y:236,'text-anchor':'middle','font-size':13,'font-weight':700,fill:'var(--warn)'},'Check before plugging in:');
+  el(svg,'text',{x:450,y:256,'text-anchor':'middle','font-size':12,fill:'var(--warn)'},'red probe on the PH pin that lands on +');
+  el(svg,'text',{x:450,y:274,'text-anchor':'middle','font-size':12,fill:'var(--warn)'},'must read +3.7 V, never −3.7 V');
 }
 
 function drawGpio(){
@@ -601,7 +650,7 @@ function applyBoard(){
 }
 document.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ boardKey=b.dataset.pick;
   try{ localStorage.setItem('board', boardKey); }catch(e){} render(); });
-function render(){ applyBoard(); drawMain(); drawExtras(); drawBattery(); drawBatteryFeather(); drawTests(); drawGpio(); tables(); }
+function render(){ applyBoard(); drawMain(); drawExtras(); drawBattery(); drawBatteryFeather(); drawPlugsF(); drawTests(); drawGpio(); tables(); }
 render();
 </script>
 </body></html>

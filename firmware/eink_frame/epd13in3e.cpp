@@ -125,9 +125,9 @@ bool waitIdle(const char *stage) {
     }
     if (millis() - start > kBusyTimeoutMs) {
       if (busyFloating()) {
-        fail("BUSY wire looks disconnected at %s (HAT BUSY -> D4)", stage);
+        fail("BUSY wire looks disconnected at %s (HAT BUSY -> " LBL_BUSY ")", stage);
       } else {
-        fail("HAT held BUSY low for 60 s at %s: panel not starting. Check PWR->D5, RST->D7, VCC->3V3, "
+        fail("HAT held BUSY low for 60 s at %s: panel not starting. Check PWR->" LBL_PWR ", RST->" LBL_RST ", VCC->" LBL_VCC ", "
              "GND, and that all 3 ribbon latches are closed", stage);
       }
       return false;
@@ -160,8 +160,8 @@ bool refresh() {
   send(BOTH, POF, POF_V, sizeof(POF_V));
   Serial.printf("[epd] refresh took %lu ms\n", (unsigned long)refreshMs);
   if (refreshMs < kMinRefreshMs) {
-    fail("panel never went busy (refresh %lu ms): it isn't getting commands. Check DIN->D10, SCLK->D8, "
-         "CS_M->D1, CS_S->D6, DC->D2 and the ribbon latches",
+    fail("panel never went busy (refresh %lu ms): it isn't getting commands. Check DIN->" LBL_MOSI
+         ", SCLK->" LBL_SCK ", CS_M->" LBL_CS_M ", CS_S->" LBL_CS_S ", DC->" LBL_DC " and the ribbon latches",
          (unsigned long)refreshMs);
     return false;
   }
@@ -197,7 +197,7 @@ bool init() {
   // A BUSY line nobody drives just follows our own pull-up/pull-down. Catch
   // that first: otherwise it can read "idle" and every refresh looks instant.
   if (busyFloating()) {
-    fail("BUSY wire isn't connected: nothing drives it (HAT BUSY -> D4, left side 5th pin)");
+    fail("BUSY wire isn't connected: nothing drives it (HAT BUSY -> " LBL_BUSY ")");
     return false;
   }
   Serial.printf("[epd] BUSY is driven by the HAT (%s after reset)\n",
@@ -283,13 +283,13 @@ void wiringTest() {
   digitalWrite(PIN_EPD_PWR, HIGH);
   delay(10);
   reset();
-  Serial.println("[test] Panel power ON (PWR/D5 high), panel reset. Wiggle one wire or ribbon at a time.");
+  Serial.println("[test] Panel power ON (PWR/" LBL_PWR " high), panel reset. Wiggle one wire or ribbon at a time.");
   Serial.println("[test] A good panel shows 'HIGH = ready' within a second of each reset.");
   Serial.println("[test] Type r + Enter to reset the panel again, q + Enter to stop (stops by itself after 10 min).");
   const char *last = "";
   uint32_t start = millis(), lastPrint = 0;
   while (millis() - start < 10UL * 60 * 1000) {
-    const char *state = busyFloating() ? "FLOATING = BUSY wire not connected (D4)"
+    const char *state = busyFloating() ? "FLOATING = BUSY wire not connected (" LBL_BUSY ")"
                         : digitalRead(PIN_EPD_BUSY) == HIGH ? "HIGH = ready"
                                                             : "LOW = busy / panel not starting";
     if (strcmp(state, last) != 0 || millis() - lastPrint >= 3000) {
@@ -307,7 +307,7 @@ void wiringTest() {
       }
       if (c == 'r' || c == 'R') {
         reset();
-        Serial.println("[test] panel reset (RST/D7 pulsed)");
+        Serial.println("[test] panel reset (RST/" LBL_RST " pulsed)");
       }
     }
     delay(100);

@@ -61,7 +61,7 @@ table{border-collapse:collapse;width:100%}
 <label>IP address<input name="ip"></label><label>Gateway<input name="gw"></label>
 <label>Subnet mask<input name="mask"></label><label>DNS<input name="dns"></label>
 </div>
-<p class="check"><input type="checkbox" name="divider" id="divider"><label for="divider" style="display:inline">Battery divider fitted on D3</label></p>
+<p class="check"><input type="checkbox" name="divider" id="divider"><label for="divider" style="display:inline">Battery reading fitted (XIAO: divider on D3; Feather: built in)</label></p>
 <div class="row"><button class="primary">Save settings</button></div>
 <p class="msg" id="setmsg">Wi-Fi and server changes take effect when you turn config mode off.</p>
 </form></section>

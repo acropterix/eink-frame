@@ -1,5 +1,5 @@
 // Panel test: Waveshare's own 13.3" Spectra 6 driver sequence, unchanged,
-// on the XIAO ESP32-S3 pins from WIRING.md. Use it to tell a firmware problem
+// on the XIAO ESP32-S3 or Feather V2 pins from WIRING.md. Use it to tell a firmware problem
 // from a hardware one: if this shows correct colours, the hardware is fine.
 //
 // Same as Waveshare's ESP32-S3-ePaper-13.3E6 Arduino example (EPD_13in3e.cpp,
@@ -11,7 +11,17 @@
 // Then type: w = white, k = black, b = bands, y = yellow, s = sleep.
 // Flash the frame firmware (eink_frame.ino) again afterwards.
 
-// XIAO ESP32-S3 GPIO numbers (silkscreen label in the comment)
+// GPIO numbers for the selected board (silkscreen label in the comment)
+#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32_V2)
+#define EPD_SCK_PIN   5   // SCK
+#define EPD_MOSI_PIN  19  // MO
+#define EPD_CS_M_PIN  33  // 33
+#define EPD_CS_S_PIN  32  // 32
+#define EPD_DC_PIN    27  // 27
+#define EPD_RST_PIN   21  // MI
+#define EPD_BUSY_PIN  4   // A5
+#define EPD_PWR_PIN   25  // A1
+#else  // Seeed XIAO ESP32-S3
 #define EPD_SCK_PIN   7   // D8  SCLK
 #define EPD_MOSI_PIN  9   // D10 DIN
 #define EPD_CS_M_PIN  2   // D1  CS_M
@@ -20,6 +30,7 @@
 #define EPD_RST_PIN   44  // D7  RST
 #define EPD_BUSY_PIN  5   // D4  BUSY
 #define EPD_PWR_PIN   6   // D5  PWR
+#endif
 
 #define EPD_WIDTH  1200
 #define EPD_HEIGHT 1600

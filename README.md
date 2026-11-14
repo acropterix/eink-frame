@@ -57,13 +57,12 @@ Pictures live in the add-on's `/data` folder and are included in Home Assistant 
 2. **Boards Manager** → install **esp32 by Espressif Systems** (3.x).
 3. Open `firmware/eink_frame/eink_frame.ino`.
 4. Copy `config.example.h` to **`config.h`** in the same folder and fill in your Wi-Fi details, `FRAME_TOKEN`, and a free fixed IP address (reserve it in your router). `SERVER_HOST` is already `192.168.2.10`. These values are only used on first boot; after that, change them from the config page.
-5. **Tools:**
-   - Board: **XIAO_ESP32S3**
-   - PSRAM: **OPI PSRAM** ← required
-   - USB CDC On Boot: **Enabled** (to see the log)
+5. **Tools** (the firmware picks the right pins for the board you select):
+   - **Adafruit ESP32 Feather V2:** Board **Adafruit Feather ESP32 V2**, PSRAM **Enabled** (the default).
+   - **Seeed XIAO ESP32-S3:** Board **XIAO_ESP32S3**, PSRAM **OPI PSRAM** ← required, USB CDC On Boot **Enabled**.
 6. **Upload**, then open the Serial Monitor at 115200 baud.
 
-**Updating firmware later:** upload it in the Home Assistant panel (section 5), or on the frame's config page (section 4): in Arduino IDE choose **Sketch → Export Compiled Binary** and upload `eink_frame.ino.bin` there. Over USB instead: the frame spends almost all its time in deep sleep, when the USB port disappears, so hold the XIAO's **BOOT** button, tap **RESET**, release **BOOT**, then upload.
+**Updating firmware later:** upload it in the Home Assistant panel (section 5), or on the frame's config page (section 4): in Arduino IDE choose **Sketch → Export Compiled Binary** and upload `eink_frame.ino.bin` there. Export the binary with the **same board** selected as the frame uses. Over USB: the Feather uploads normally even while asleep. The XIAO's USB port disappears in deep sleep, so hold its **BOOT** button, tap **RESET**, release **BOOT**, then upload.
 
 ## 3. Bring-up order
 1. **XIAO alone on USB.** After reset, the log should show Wi-Fi connecting and `[http] status 200` or `304`. With no panel attached, a 200 ends in a BUSY timeout, which is expected.

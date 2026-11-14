@@ -19,6 +19,8 @@ bool buttonDown();
 bool buttonHeldFor(uint32_t ms);
 // Hand the wake pins back to normal GPIO after deep sleep.
 void releaseWakePins();
+// Switch off board extras that would drain the battery (Feather V2 NeoPixel/QT power).
+void boardPowerOff();
 // Deep sleep. The button always wakes the frame; the config switch wakes it
 // too unless it is already on (e.g. sleeping because the battery is flat).
 [[noreturn]] void sleepFor(uint32_t seconds);

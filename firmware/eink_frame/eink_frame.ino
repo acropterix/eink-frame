@@ -81,6 +81,7 @@ const char *resetReason() {
 
 const char *wakeReason() {
   switch (esp_sleep_get_wakeup_cause()) {
+    case ESP_SLEEP_WAKEUP_EXT0: return "button";
     case ESP_SLEEP_WAKEUP_EXT1:
       return (esp_sleep_get_ext1_wakeup_status() & (1ULL << PIN_BUTTON)) ? "button" : "config";
     case ESP_SLEEP_WAKEUP_TIMER: return "timer";
@@ -123,6 +124,7 @@ void setup() {
   gpio_deep_sleep_hold_dis();
   pinMode(PIN_EPD_PWR, OUTPUT);
   digitalWrite(PIN_EPD_PWR, LOW);
+  power::boardPowerOff();
 
   Settings s;
   settings::load(s);
@@ -130,8 +132,8 @@ void setup() {
   settings::loadRemote(rs);
   const char *reason = wakeReason();
   uint16_t batteryMv = power::batteryMv(s);
-  Serial.printf("\n[boot] %s, wake: %s, reset: %s, battery %u mV, settings v%lu, PSRAM %u bytes\n",
-                kFirmwareTag, reason, resetReason(), batteryMv, (unsigned long)s.cfgVersion,
+  Serial.printf("\n[boot] %s on %s, wake: %s, reset: %s, battery %u mV, settings v%lu, PSRAM %u bytes\n",
+                kFirmwareTag, BOARD_NAME, reason, resetReason(), batteryMv, (unsigned long)s.cfgVersion,
                 (unsigned)ESP.getPsramSize());
   if (esp_reset_reason() == ESP_RST_BROWNOUT) noteError("brown-out reset: the supply dipped (panel power-on?)");
 

@@ -40,6 +40,7 @@ int batteryPercent(uint16_t mv) {
 }
 
 bool configSwitchOn() {
+  if (PIN_CONFIG < 0) return false;  // board without a config switch
   pinMode(PIN_CONFIG, INPUT_PULLUP);
   int low = 0;
   for (int i = 0; i < 5; i++) {
@@ -68,9 +69,21 @@ bool buttonHeldFor(uint32_t ms) {
 }
 
 void releaseWakePins() {
-  for (gpio_num_t pin : {(gpio_num_t)PIN_BUTTON, (gpio_num_t)PIN_CONFIG}) rtc_gpio_deinit(pin);
+  rtc_gpio_deinit((gpio_num_t)PIN_BUTTON);
   pinMode(PIN_BUTTON, INPUT_PULLUP);
-  pinMode(PIN_CONFIG, INPUT_PULLUP);
+  if (PIN_CONFIG >= 0) {
+    rtc_gpio_deinit((gpio_num_t)PIN_CONFIG);
+    pinMode(PIN_CONFIG, INPUT_PULLUP);
+  }
+}
+
+void boardPowerOff() {
+  // Feather V2: the board's start-up code turns on the NeoPixel/STEMMA QT
+  // regulator; it would waste battery the whole time the frame sleeps.
+  if (PIN_BOARD_POWER >= 0) {
+    pinMode(PIN_BOARD_POWER, OUTPUT);
+    digitalWrite(PIN_BOARD_POWER, LOW);
+  }
 }
 
 void sleepFor(uint32_t seconds) {
@@ -81,16 +94,26 @@ void sleepFor(uint32_t seconds) {
 
   esp_sleep_enable_timer_wakeup((uint64_t)seconds * 1000000ULL);
 
-  uint64_t mask = 1ULL << PIN_BUTTON;
-  if (!switchOn) mask |= 1ULL << PIN_CONFIG;
-  for (gpio_num_t pin : {(gpio_num_t)PIN_BUTTON, (gpio_num_t)PIN_CONFIG}) {
-    rtc_gpio_init(pin);
-    rtc_gpio_set_direction(pin, RTC_GPIO_MODE_INPUT_ONLY);
-    rtc_gpio_pullup_en(pin);
-    rtc_gpio_pulldown_dis(pin);
+  boardPowerOff();
+  for (int pin : {PIN_BUTTON, PIN_CONFIG}) {
+    if (pin < 0) continue;
+    rtc_gpio_init((gpio_num_t)pin);
+    rtc_gpio_set_direction((gpio_num_t)pin, RTC_GPIO_MODE_INPUT_ONLY);
+    rtc_gpio_pullup_en((gpio_num_t)pin);
+    rtc_gpio_pulldown_dis((gpio_num_t)pin);
   }
   esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);  // keep the pull-ups alive
+#if CONFIG_IDF_TARGET_ESP32
+  // The original ESP32's ext1 can't wake on "any pin low", so the button
+  // (the only wake pin on the Feather) uses ext0 instead.
+  esp_sleep_enable_ext0_wakeup((gpio_num_t)PIN_BUTTON, 0);
+#else
+  uint64_t mask = 1ULL << PIN_BUTTON;
+#if PIN_CONFIG >= 0
+  if (!switchOn) mask |= 1ULL << PIN_CONFIG;
+#endif
   esp_sleep_enable_ext1_wakeup(mask, ESP_EXT1_WAKEUP_ANY_LOW);
+#endif
 
   // Keep the panel's power switch firmly off while we sleep.
   digitalWrite(PIN_EPD_PWR, LOW);

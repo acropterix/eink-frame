@@ -10,6 +10,28 @@
 - 2 × 100 kΩ resistors (battery voltage reading; optional)
 - Female–female jumper wires
 
+## Adafruit ESP32 Feather V2 (current build)
+Hold the Feather with USB-C at the top and the components facing you. Pin labels are printed next to every pin.
+
+| HAT signal | Feather pin | (GPIO) |
+|---|---|---|
+| VCC  | **3V**  | — |
+| GND  | **GND** | — |
+| BUSY | **A5**  | 4 |
+| PWR  | **A1**  | 25 |
+| SCLK | **SCK** | 5 |
+| DIN  | **MO**  | 19 |
+| RST  | **MI**  | 21 |
+| DC   | **27**  | 27 |
+| CS_M | **33**  | 33 |
+| CS_S | **32**  | 32 |
+| Button | **A0** → button → **GND** | 26 |
+| Battery | JST socket (2.0 mm PH; adapter for a 1.25 mm plug). Reading built in. | 35 |
+
+Pins avoided on purpose: 12 (must be low at power-on), 13 (red LED), 14/15 (pulse during boot), 34/36/37/39 (input only). The firmware turns off the Feather's NeoPixel/STEMMA power during sleep to save battery.
+
+The sections below are for the **Seeed XIAO ESP32-S3**.
+
 ## Display: 10 wires
 Use the 10-wire cable that came with the HAT: its small white plug goes into the HAT's 10-pin socket (printed left→right: PWR BUSY RST DC CS_S CS_M SCLK DIN GND VCC) and its jumper ends push onto the XIAO pins. The 40-pin socket on the HAT's underside is only a fallback.
 

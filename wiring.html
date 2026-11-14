@@ -41,12 +41,21 @@ select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--
 .small{font-size:14px;color:var(--muted)}
 ol{margin:6px 0;padding-left:22px}
 .pos{white-space:nowrap}
+body[data-board="xiao"] [data-board="feather"], body[data-board="feather"] [data-board="xiao"]{display:none}
+.boardsel{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 6px}
+.boardsel button{font:inherit;font-weight:600;padding:8px 14px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--text);cursor:pointer}
+.boardsel button[aria-pressed="true"]{border-color:var(--accent);background:var(--okbg)}
 </style>
 </head>
 <body><main>
 
 <h1>Frame wiring</h1>
-<p class="lead">Seeed XIAO ESP32-S3 → Waveshare 13.3" e-Paper HAT+ (E). Follow the pictures; each step has one diagram.</p>
+<p class="lead"><span class="bfull">Adafruit ESP32 Feather V2</span> → Waveshare 13.3" e-Paper HAT+ (E). Follow the pictures; each step has one diagram.</p>
+<div class="boardsel" role="group" aria-label="Which board">
+<button type="button" data-pick="feather">Adafruit Feather ESP32 V2</button>
+<button type="button" data-pick="xiao">Seeed XIAO ESP32-S3</button>
+</div>
+<p class="small" style="margin:0 0 14px">Pick your board: every diagram and table below redraws for it. Flash the firmware with the same board selected in Arduino IDE.</p>
 
 <!-- ============ OVERVIEW ============ -->
 <section>
@@ -62,8 +71,8 @@ ol{margin:6px 0;padding-left:22px}
     <text x="385" y="92" fill="#fff" font-weight="600">HAT+ board</text>
     <text x="385" y="110" fill="#cfe0ff" font-size="12">10-pin plug</text>
     <rect x="530" y="55" width="120" height="80" rx="8" fill="var(--pcb)"/>
-    <text x="590" y="92" fill="var(--pcbtext)" font-weight="600">XIAO</text>
-    <text x="590" y="110" fill="var(--pcbtext)" font-size="12">ESP32-S3</text>
+    <text id="ovBoard" x="590" y="92" fill="var(--pcbtext)" font-weight="600">Feather</text>
+    <text id="ovChip" x="590" y="110" fill="var(--pcbtext)" font-size="12">ESP32 V2</text>
     <rect x="720" y="15" width="170" height="44" rx="8" fill="var(--hub)" stroke="var(--hubline)"/>
     <text x="805" y="42" fill="var(--text)" font-size="13">push button</text>
     <rect x="720" y="73" width="170" height="44" rx="8" fill="var(--hub)" stroke="var(--hubline)"/>
@@ -126,43 +135,59 @@ ol{margin:6px 0;padding-left:22px}
 
 <!-- ============ STEP 2 ============ -->
 <section>
-<h2><span class="step">2</span>The 10-wire cable: HAT → XIAO</h2>
-<p>Plug the cable's small white plug into the HAT. Push each black jumper end onto the XIAO pin shown. <b>Hold both boards exactly like this:</b> HAT text readable, XIAO with <b>USB-C at the top and the metal shield facing you</b>.</p>
+<h2><span class="step">2</span>The 10-wire cable: HAT → <span class="bn">board</span></h2>
+<p>Plug the cable's small white plug into the HAT. Push each black jumper end onto the <span class="bn">board</span> pin shown. <b>Hold both boards exactly like this:</b> HAT text readable, <span class="bn">board</span> with <b>USB-C at the top and the <span data-board="xiao">metal shield</span><span data-board="feather">components and pin labels</span> facing you</b>.</p>
 <svg id="main" viewBox="0 0 900 735" role="img" aria-label="Wiring diagram from HAT 10-pin plug to XIAO pins"></svg>
 
 <div class="grid2" style="margin-top:12px">
 <div>
 <h3 style="margin:0 0 6px;font-size:16px">Your cable's colours</h3>
 <p class="small" style="margin:0 0 8px">Colours are from Waveshare's cable photo. <b>Before powering, check each one:</b> with the plug in the HAT, read the colour under each printed label and fix any that differ here — the diagram recolours to match.</p>
-<table id="colors"><thead><tr><th>HAT label</th><th>Wire colour</th><th>XIAO pin</th></tr></thead><tbody></tbody></table>
+<table id="colors"><thead><tr><th>HAT label</th><th>Wire colour</th><th><span class="bn">Board</span> pin</th></tr></thead><tbody></tbody></table>
 </div>
 <div>
 <h3 style="margin:0 0 6px;font-size:16px">Where each pin is</h3>
-<p class="small" style="margin:0 0 8px">USB-C at the top, shield facing you. Count pins from the top.</p>
-<table id="where"><thead><tr><th>XIAO pin</th><th>Position</th><th>HAT label</th></tr></thead><tbody></tbody></table>
+<p class="small" style="margin:0 0 8px">USB-C at the top, <span data-board="xiao">shield</span><span data-board="feather">components</span> facing you. Count pins from the top<span data-board="feather"> of each row (the labels are also printed next to every pin)</span>.</p>
+<table id="where"><thead><tr><th>Pin</th><th>Position</th><th>Goes to</th></tr></thead><tbody></tbody></table>
 </div>
 </div>
-<div class="note warn">⚠️ Before plugging in USB: follow each wire from its <b>printed label on the HAT</b> to the XIAO pin — go by the label, not the colour. Red must sit under <b>VCC</b> and go to <b>3V3</b>; black under <b>GND</b> to <b>GND</b>. Then power up and touch both boards after 10 s — anything hot, unplug.</div>
-<div class="note warn">⚡ Keep the <b>VCC and GND</b> jumpers short and direct (≈10 cm or less), XIAO straight to HAT. The panel draws current in bursts; long or shared power leads make it show <b>only yellow and black</b>.</div>
-<div class="note ok">Test now: USB-C into the Mac, press <b>R</b> on the XIAO. The panel flickers for ~20 s and shows a picture.</div>
+<div class="note warn">⚠️ Before plugging in USB: follow each wire from its <b>printed label on the HAT</b> to the <span class="bn">board</span> pin — go by the label, not the colour. Red must sit under <b>VCC</b> and go to <b class="bvcc">3V3</b>; black under <b>GND</b> to <b>GND</b>. Then power up and touch both boards after 10 s — anything hot, unplug.</div>
+<div class="note warn">⚡ Keep the <b>VCC and GND</b> jumpers short and direct (≈10 cm or less), board straight to HAT. The panel draws current in bursts; long or shared power leads make it show <b>only yellow and black</b>.</div>
+<div class="note ok">Test now: USB-C into the Mac, press the board's reset button (<span data-board="xiao"><b>R</b> on the XIAO</span><span data-board="feather"><b>reset</b> on the Feather</span>). The panel flickers for ~20 s and shows a picture.</div>
 </section>
 
 <!-- ============ STEP 3 ============ -->
 <section>
 <h2><span class="step">3</span>The push button</h2>
 <p>One button does everything: <b>short press</b> = next picture, <b>hold 3 s</b> = config mode (hold 3 s again, or press Restart on the page, to leave; it also ends by itself after 30 min). No switch, LED or resistor needed.</p>
-<svg id="extras" viewBox="0 0 900 380" role="img" aria-label="Push button wiring from D0 to GND"></svg>
-<ol class="small">
+<svg id="extras" viewBox="0 0 900 380" role="img" aria-label="Push button wiring"></svg>
+<ol class="small" data-board="feather">
+<li>One button leg → <b>A0</b> (left row, 5th pin from the top, just below GND). No resistor: the firmware turns on the pull-up.</li>
+<li>Other leg → <b>GND</b> (left row, 4th pin). Leave the HAT's GND jumper on it and solder the button's wire to the <b>same GND pin from the underside</b>.</li>
+<li>Keep the button leads short, and never route them through the HAT's power wires. (The Feather's own <b>SW38</b> button isn't used: it would be hidden inside the frame.)</li>
+</ol>
+<ol class="small" data-board="xiao">
 <li>One button leg → <b>D0</b> (left side, 1st pin from the top). No resistor: the firmware turns on the pull-up.</li>
 <li>Other leg → <b>GND</b>. Leave the HAT's GND jumper where it is and solder the button's wire to the <b>same GND pin from the underside</b> of the XIAO.</li>
 <li>Keep the button leads short too, and never route them through the HAT's power wires.</li>
 </ol>
-<p class="small">Optional: a toggle switch from D9 to GND still works as a config-mode switch, but you don't need it.</p>
+<p class="small" data-board="xiao">Optional: a toggle switch from D9 to GND still works as a config-mode switch, but you don't need it.</p>
 </section>
 
 <!-- ============ STEP 4 ============ -->
 <section>
-<h2><span class="step">4</span>Battery and battery reading (XIAO underside)</h2>
+<h2><span class="step">4</span>Battery</h2>
+<div data-board="feather">
+<svg id="batteryF" viewBox="0 0 900 330" role="img" aria-label="Battery plugs into the Feather's JST socket"></svg>
+<div class="note ok">✅ <b>No soldering.</b> The battery plugs into the Feather's socket, charges whenever USB-C is connected (the <b>CHG</b> light is on while charging), and the battery reading is built in.</div>
+<ol class="small">
+<li><b>Adapter:</b> your battery has a <b>1.25 mm</b> plug; the Feather's socket is <b>2.0 mm JST-PH</b>. Use a short "JST PH 2.0 to 1.25" adapter (or an Adafruit LiPo, which plugs straight in).</li>
+<li><b>Check polarity before plugging in.</b> Battery + adapter together, multimeter on the adapter's PH plug: the pin that will land on the <b>+</b> printed next to the Feather's socket must read <b>+3.7 V</b>. If it reads −3.7 V, don't use that adapter.</li>
+<li>Plug in. Keep the battery leads short and away from the panel ribbon.</li>
+<li>Battery %: nothing to wire. It's read from the Feather's built-in monitor and shows in Home Assistant at the next check-in.</li>
+</ol>
+</div>
+<div data-board="xiao">
 <svg id="battery" viewBox="0 0 900 365" role="img" aria-label="Battery pads on underside"></svg>
 <div class="note warn">⚠️ Check the battery plug with a multimeter first: red probe on the wire you'll solder to BAT+ must read +3.7 V. Reversed = dead XIAO.</div>
 <h3 style="font-size:16px;margin:14px 0 6px">The easy way to solder the tiny pads</h3>
@@ -208,6 +233,7 @@ ol{margin:6px 0;padding-left:22px}
 <li>Hold the button 3 s → <b>http://eink-frame.local</b> → tick <b>Battery divider fitted on D3</b> → Save.</li>
 </ol>
 <p class="small">It draws about 20 µA, roughly 6% of the battery per year. Don't use 1 MΩ resistors without the capacitor: the reading becomes unreliable.</p>
+</div>
 </section>
 
 <!-- ============ DEBUG ============ -->
@@ -261,11 +287,23 @@ const COLORS = {red:'#d93025',black:'#1b1b1b',brown:'#7b4a2a',orange:'#f08c00',y
   green:'#2e9e44',blue:'#1f6fd1',purple:'#8e44ad',grey:'#9aa0a6',white:'#f4f4f4'};
 // HAT plug order left→right as printed on the board
 const HAT = ['PWR','BUSY','RST','DC','CS_S','CS_M','SCLK','DIN','GND','VCC'];
-const MAP = {PWR:'D5',BUSY:'D4',RST:'D7',DC:'D2',CS_S:'D6',CS_M:'D1',SCLK:'D8',DIN:'D10',GND:'GND',VCC:'3V3'};
 const DEFAULT = {VCC:'red',GND:'black',DIN:'blue',SCLK:'yellow',CS_M:'orange',CS_S:'green',DC:'white',RST:'purple',BUSY:'brown',PWR:'grey'};
-const LEFT = ['D0','D1','D2','D3','D4','D5','D6'], RIGHT = ['5V','GND','3V3','D10','D9','D8','D7'];
-const OTHER = {D0:'button',D3:'battery',D9:'unused','5V':'unused'};
-const OTHER_STEP = {D0:3, D3:4};
+const BOARDS = {
+  feather: { full:'Adafruit ESP32 Feather V2', short:'Feather', chip:'ESP32 V2',
+    left:['RST','3V','NC','GND','A0','A1','A2','A3','A4','A5','SCK','MO','MI','RX','TX','37'],
+    right:['BAT','EN','USB','13','12','27','33','15','32','14','SCL','SDA'], rightOffset:4,
+    map:{PWR:'A1',BUSY:'A5',RST:'MI',DC:'27',CS_S:'32',CS_M:'33',SCLK:'SCK',DIN:'MO',GND:'GND',VCC:'3V'},
+    other:{A0:'button'}, otherStep:{A0:3}, compact:true,
+    caption:'USB-C at the top, components and labels facing you · dashed = used in step 3' },
+  xiao: { full:'Seeed XIAO ESP32-S3', short:'XIAO', chip:'ESP32-S3',
+    left:['D0','D1','D2','D3','D4','D5','D6'], right:['5V','GND','3V3','D10','D9','D8','D7'], rightOffset:0,
+    map:{PWR:'D5',BUSY:'D4',RST:'D7',DC:'D2',CS_S:'D6',CS_M:'D1',SCLK:'D8',DIN:'D10',GND:'GND',VCC:'3V3'},
+    other:{D0:'button',D3:'battery',D9:'unused','5V':'unused'}, otherStep:{D0:3,D3:4}, compact:false,
+    caption:'metal shield facing you · dashed = used in steps 3–4' },
+};
+let boardKey = 'feather';
+try{ const b = localStorage.getItem('board'); if(BOARDS[b]) boardKey = b; }catch(e){}
+let B = BOARDS[boardKey];
 let col = {...DEFAULT};
 try{ const s = JSON.parse(localStorage.getItem('wireColors2')||'null'); if(s) col = {...col, ...s}; }catch(e){}
 
@@ -302,14 +340,38 @@ function xiao(g, x, y, opts={}){
   el(g,'text',{x:x+60,y:y+H-14,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'var(--pcbtext)'},'B');
   el(g,'text',{x:x+84,y:y+H-14,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'var(--pcbtext)'},'R');
   const P={};
-  LEFT.forEach((n,i)=>{ P[n]=[lx,rowY(i)]; });
-  RIGHT.forEach((n,i)=>{ P[n]=[rx,rowY(i)]; });
+  BOARDS.xiao.left.forEach((n,i)=>{ P[n]=[lx,rowY(i)]; });
+  BOARDS.xiao.right.forEach((n,i)=>{ P[n]=[rx,rowY(i)]; });
   for(const n in P){ const [px,py]=P[n];
     el(g,'circle',{cx:px,cy:py,r:6,fill:'#d4af37',stroke:'#7a5e10'});
     el(g,'circle',{cx:px,cy:py,r:2.3,fill:'var(--pcb)'});
     const left = px<x+W/2;
     el(g,'text',{x:left?px+10:px-10,y:py+4,'text-anchor':left?'start':'end','font-size':11,fill:'var(--pcbtext)','font-weight':600},n); }
-  return P; }
+  P._w=W; P._h=H; P._lx=lx; P._rx=rx; return P; }
+
+// Draw a Feather ESP32 V2 (top view, USB-C up). Returns pin coordinates.
+function feather(g, x, y){
+  const F=BOARDS.feather, W=170, step=28, rowY=i=>y+40+i*step, H=40+15*step+40, lx=x+15, rx=x+W-15;
+  el(g,'rect',{x:x+60,y:y-20,width:50,height:30,rx:6,fill:'#c9ccd0',stroke:'#777'});
+  el(g,'text',{x:x+85,y:y-26,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},'USB-C');
+  el(g,'rect',{x,y,width:W,height:H,rx:12,fill:'var(--pcb)'});
+  el(g,'rect',{x:x+W-58,y:y+18,width:32,height:46,rx:3,fill:'#f1ede4',stroke:'#999'});
+  el(g,'text',{x:x+W-64,y:y+58,'text-anchor':'end','font-size':13,'font-weight':700,fill:'var(--pcbtext)'},'+');
+  el(g,'text',{x:x+W-42,y:y+80,'text-anchor':'middle','font-size':9,fill:'var(--pcbtext)'},'battery');
+  el(g,'rect',{x:x+50,y:y+H-160,width:W-100,height:120,rx:4,fill:'var(--shield)'});
+  el(g,'text',{x:x+W/2,y:y+H-104,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#2a2d31'},'Feather');
+  el(g,'text',{x:x+W/2,y:y+H-88,'text-anchor':'middle','font-size':11,fill:'#2a2d31'},'ESP32 V2');
+  const P={};
+  F.left.forEach((n,i)=>{ P[n]=[lx,rowY(i)]; });
+  F.right.forEach((n,i)=>{ P[n]=[rx,rowY(i+F.rightOffset)]; });
+  for(const n in P){ const [px,py]=P[n];
+    el(g,'circle',{cx:px,cy:py,r:6,fill:'#d4af37',stroke:'#7a5e10'});
+    el(g,'circle',{cx:px,cy:py,r:2.3,fill:'var(--pcb)'});
+    const left = px<x+W/2;
+    el(g,'text',{x:left?px+10:px-10,y:py+4,'text-anchor':left?'start':'end','font-size':11,fill:'var(--pcbtext)','font-weight':600},n); }
+  P._w=W; P._h=H; P._lx=lx; P._rx=rx; return P; }
+
+function drawBoard(g, cx, y){ return boardKey==='feather' ? feather(g, cx-85, y) : xiao(g, cx-70, y); }
 
 function drawMain(){
   const svg=document.getElementById('main'); svg.innerHTML='';
@@ -323,25 +385,48 @@ function drawMain(){
   el(svg,'rect',{x:350,y:172,width:202,height:24,rx:3,fill:'#f2f2f2',stroke:'#999'});
   HAT.forEach((n,i)=>{ el(svg,'text',{x:0,y:0,transform:`translate(${px(i)+4} 166) rotate(-90)`,'font-size':10.5,fill:'#fff','font-weight':600},n);
     el(svg,'rect',{x:px(i)-3,y:180,width:6,height:12,fill:'#bbb'}); });
-  // XIAO
-  const P = xiao(svg, 380, 450);
-  // lanes: [hatIndex, laneY, laneX]
-  const L = {PWR:[225,190],BUSY:[245,215],DC:[265,240],CS_S:[285,265],CS_M:[305,290],
-             VCC:[325,710],GND:[345,685],DIN:[365,660],SCLK:[385,635],RST:[405,610]};
+  const top=450, P = drawBoard(svg, 450, top), lx=P._lx, rx=P._rx;
+  svg.setAttribute('viewBox', `0 0 900 ${top+P._h+45}`);
+  // Route each wire on its own lane: outer lanes for the plug's outer pins, so few wires cross.
+  const lefts=HAT.filter(n=>P[B.map[n]][0]<450), rights=HAT.filter(n=>P[B.map[n]][0]>=450).reverse();
+  const L={};
+  lefts.forEach((n,k)=>{ L[n]=[225+k*20, lx-105-(lefts.length-1-k)*22]; });
+  rights.forEach((n,k)=>{ L[n]=[225+(lefts.length+k)*20, rx+105+(rights.length-1-k)*22]; });
   const g=el(svg,'g',{});
-  HAT.forEach((n,i)=>{ const [ly,lx]=L[n], [tx,ty]=P[MAP[n]], x0=px(i);
-    wire(g,[[x0,194],[x0,ly],[lx,ly],[lx,ty],[tx,ty]], COLORS[col[n]]); });
-  // pin-end dots and labels
-  HAT.forEach(n=>{ const [tx,ty]=P[MAP[n]], left=tx<450;
+  HAT.forEach((n,i)=>{ const [ly,lane]=L[n], [tx,ty]=P[B.map[n]], x0=px(i);
+    wire(g,[[x0,194],[x0,ly],[lane,ly],[lane,ty],[tx,ty]], COLORS[col[n]]); });
+  HAT.forEach(n=>{ const [tx,ty]=P[B.map[n]], left=tx<450;
     el(svg,'circle',{cx:tx,cy:ty,r:6,fill:COLORS[col[n]],stroke:'var(--edge)'});
-    pill(svg, left?342:558, ty, n, col[n], 62); });
-  for(const n in OTHER){ const [tx,ty]=P[n]; const left=tx<450;
-    ghost(svg, left?342:558, ty, OTHER[n], 62); }
-  el(svg,'text',{x:450,y:722,'text-anchor':'middle','font-size':13,fill:'var(--muted)'},'metal shield facing you · dashed = used in step 3');
+    pill(svg, left?lx-53:rx+53, ty, n, col[n], 62); });
+  for(const n in B.other){ const [tx,ty]=P[n]; const left=tx<450;
+    ghost(svg, left?lx-53:rx+53, ty, B.other[n], 62); }
+  el(svg,'text',{x:450,y:top+P._h+32,'text-anchor':'middle','font-size':13,fill:'var(--muted)'},B.caption);
 }
 
-function drawExtras(){
+function drawExtras(){ return boardKey==='feather' ? drawExtrasFeather() : drawExtrasXiao(); }
+
+function drawExtrasFeather(){
   const svg=document.getElementById('extras'); svg.innerHTML='';
+  const P = feather(svg, 365, 40), lx=P._lx, rx=P._rx;
+  svg.setAttribute('viewBox', `0 0 900 ${40+P._h+20}`);
+  const g=el(svg,'g',{}), K='#3d7a4f', yG=P.GND[1], yA=P.A0[1], bt=yA+70;
+  wire(g,[[lx,yG],[120,yG],[120,bt]],K,4);
+  wire(g,[[lx,yA],[180,yA],[180,bt]],K,4);
+  el(svg,'rect',{x:100,y:bt,width:100,height:50,rx:6,fill:'var(--card)',stroke:'var(--edge)','stroke-width':2});
+  el(svg,'circle',{cx:150,cy:bt+25,r:13,fill:'#555'});
+  el(svg,'text',{x:150,y:bt+76,'text-anchor':'middle','font-size':15,'font-weight':700,fill:'var(--text)'},'button');
+  el(svg,'text',{x:150,y:bt+94,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},'tap = next picture');
+  el(svg,'text',{x:150,y:bt+110,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},'hold 3 s = config mode');
+  el(svg,'text',{x:220,y:yG-8,'font-size':11,fill:'var(--muted)'},'GND (under the pin)');
+  el(svg,'text',{x:220,y:yA+16,'font-size':11,fill:'var(--muted)'},'A0');
+  el(svg,'text',{x:rx+30,y:P['3V'][1],'font-size':13,'font-weight':700,fill:'var(--text)'},'3V and GND also carry');
+  el(svg,'text',{x:rx+30,y:P['3V'][1]+18,'font-size':13,'font-weight':700,fill:'var(--text)'},"the HAT's VCC / GND jumpers:");
+  el(svg,'text',{x:rx+30,y:P['3V'][1]+36,'font-size':12,fill:'var(--warn)'},'keep them short, nothing else on them');
+}
+
+function drawExtrasXiao(){
+  const svg=document.getElementById('extras'); svg.innerHTML='';
+  svg.setAttribute('viewBox','0 0 900 380');
   const P = xiao(svg, 380, 60);
   const g=el(svg,'g',{});
   const K='#3d7a4f';
@@ -401,6 +486,37 @@ function drawBattery(){
   el(svg,'text',{x:700,y:354,'font-size':12,fill:'var(--muted)'},'wire joints; pads are labelled');
 }
 
+function drawBatteryFeather(){
+  const svg=document.getElementById('batteryF'); if(!svg) return; svg.innerHTML='';
+  const x=560, y=40, W=170;
+  el(svg,'rect',{x:x+60,y:y-20,width:50,height:30,rx:6,fill:'#c9ccd0',stroke:'#777'});
+  el(svg,'text',{x:x+85,y:y-26,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},'USB-C (charges the battery)');
+  el(svg,'path',{d:`M${x} ${y+12} a12 12 0 0 1 12 -12 h${W-24} a12 12 0 0 1 12 12 v250 h-${W} z`,fill:'var(--pcb)'});
+  el(svg,'text',{x:x+30,y:y+40,'font-size':11,fill:'var(--pcbtext)'},'CHG');
+  el(svg,'circle',{cx:x+22,cy:y+36,r:4,fill:'#f2a33a'});
+  const sx=x+W-58, sy=y+40;
+  el(svg,'rect',{x:sx,y:sy,width:34,height:52,rx:3,fill:'#f1ede4',stroke:'#999'});
+  el(svg,'rect',{x:sx+8,y:sy+8,width:10,height:10,fill:'#bbb'});
+  el(svg,'rect',{x:sx+8,y:sy+34,width:10,height:10,fill:'#bbb'});
+  el(svg,'text',{x:sx+42,y:sy+44,'font-size':16,'font-weight':700,fill:'var(--pcbtext)'},'+');
+  el(svg,'text',{x:sx+42,y:sy+18,'font-size':16,'font-weight':700,fill:'var(--pcbtext)'},'−');
+  el(svg,'text',{x:x+W/2,y:y+200,'text-anchor':'middle','font-size':12,fill:'var(--pcbtext)'},'Feather ESP32 V2');
+  el(svg,'text',{x:x+W/2,y:y+218,'text-anchor':'middle','font-size':11,fill:'#a9adb3'},'(top part shown)');
+  const g=el(svg,'g',{});
+  // battery -> adapter -> socket
+  el(svg,'rect',{x:40,y:150,width:220,height:100,rx:10,fill:'#c7d3dc',stroke:'var(--edge)'});
+  el(svg,'text',{x:150,y:195,'text-anchor':'middle','font-size':15,'font-weight':700,fill:'#111'},'3.7 V LiPo');
+  el(svg,'text',{x:150,y:215,'text-anchor':'middle','font-size':12,fill:'#333'},'3000 mAh · 1.25 mm plug');
+  wire(g,[[260,185],[330,185]],'#1b1b1b',4); wire(g,[[260,205],[330,205]],'#d93025',4);
+  el(svg,'rect',{x:330,y:172,width:110,height:46,rx:6,fill:'var(--hub)',stroke:'var(--hubline)'});
+  el(svg,'text',{x:385,y:192,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'var(--text)'},'adapter');
+  el(svg,'text',{x:385,y:208,'text-anchor':'middle','font-size':11,fill:'var(--muted)'},'1.25 ↔ PH 2.0');
+  wire(g,[[440,185],[480,185],[480,sy+13],[sx+13,sy+13]],'#1b1b1b',4);
+  wire(g,[[440,205],[500,205],[500,sy+39],[sx+13,sy+39]],'#d93025',4);
+  el(svg,'text',{x:385,y:250,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'var(--warn)'},'check: red must reach +');
+  el(svg,'text',{x:385,y:266,'text-anchor':'middle','font-size':11,fill:'var(--muted)'},'go by the + printed on the board');
+}
+
 function drawGpio(){
   const svg=document.getElementById('gpio'); svg.innerHTML='';
   const USE={1:'VCC',6:'GND',11:'RST',12:'PWR',18:'BUSY',19:'DIN',22:'DC',23:'SCLK',24:'CS_M',26:'CS_S'};
@@ -416,24 +532,26 @@ function drawGpio(){
   }
   el(svg,'text',{x:20,y:115,'font-size':12,fill:'var(--muted)','text-anchor':'middle'},'odd');
   el(svg,'text',{x:20,y:175,'font-size':12,fill:'var(--muted)','text-anchor':'middle'},'even');
-  el(svg,'text',{x:450,y:290,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},'Same XIAO pins as Step 2: VCC→3V3, GND→GND, DIN→D10, SCLK→D8, CS_M→D1, CS_S→D6, DC→D2, RST→D7, BUSY→D4, PWR→D5');
+  el(svg,'text',{x:450,y:290,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},`Same ${B.short} pins as Step 2: ` + HAT.map(s=>`${s}→${B.map[s]}`).join(', '));
 }
 
-function position(pin){ let i=LEFT.indexOf(pin); if(i>=0) return `left side, ${ord(i+1)} from top`;
-  i=RIGHT.indexOf(pin); return `right side, ${ord(i+1)} from top`; }
+function position(pin){ let i=B.left.indexOf(pin); if(i>=0) return `left row, ${ord(i+1)} from top`;
+  i=B.right.indexOf(pin); return `right row, ${ord(i+1)} from top`; }
 function ord(n){ return n+(['th','st','nd','rd'][n]||'th'); }
 
 function tables(){
   const tb=document.querySelector('#colors tbody'); tb.innerHTML='';
   [...HAT].reverse().forEach(n=>{ const tr=document.createElement('tr');
     const opts=Object.keys(COLORS).map(c=>`<option ${c===col[n]?'selected':''}>${c}</option>`).join('');
-    tr.innerHTML=`<td><b>${n}</b></td><td><span class="sw" style="background:${COLORS[col[n]]}"></span><select data-s="${n}">${opts}</select></td><td>${MAP[n]}</td>`;
+    tr.innerHTML=`<td><b>${n}</b></td><td><span class="sw" style="background:${COLORS[col[n]]}"></span><select data-s="${n}">${opts}</select></td><td>${B.map[n]}</td>`;
     tb.appendChild(tr); });
   tb.querySelectorAll('select').forEach(s=>s.onchange=()=>{ col[s.dataset.s]=s.value;
     try{ localStorage.setItem('wireColors2', JSON.stringify(col)); }catch(e){} render(); });
   const wb=document.querySelector('#where tbody'); wb.innerHTML='';
-  const rows=[...LEFT,...RIGHT].map(p=>{ const sig=Object.keys(MAP).find(k=>MAP[k]===p);
-    return `<tr><td><b>${p}</b></td><td class="pos">${position(p)}</td><td>${sig?`<span class="sw" style="background:${COLORS[col[sig]]}"></span>${sig}`:`<span class="small">${OTHER[p]}${OTHER_STEP[p]?` (step ${OTHER_STEP[p]})`:''}</span>`}</td></tr>`; });
+  const pins=[...B.left,...B.right].filter(p=>!B.compact || Object.values(B.map).includes(p) || B.other[p]);
+  const rows=pins.map(p=>{ const sig=Object.keys(B.map).find(k=>B.map[k]===p);
+    const rest=B.other[p]?`<span class="small">${B.other[p]}${B.otherStep[p]?` (step ${B.otherStep[p]})`:''}</span>`:'<span class="small">—</span>';
+    return `<tr><td><b>${p}</b></td><td class="pos">${position(p)}</td><td>${sig?`<span class="sw" style="background:${COLORS[col[sig]]}"></span>HAT ${sig}`:rest}</td></tr>`; });
   wb.innerHTML=rows.join('');
 }
 function drawTests(){
@@ -441,9 +559,9 @@ function drawTests(){
   const BANDS=['#1b1b1b','#f4f4f4','#f2c200','#d93025','#1f6fd1','#2e9e44'];
   const cases=[
     ['full','All good','wiring OK → check schedule'],
-    ['left','Left half only','CS_S wire → D6'],
-    ['right','Right half only','CS_M wire → D1'],
-    ['noise','Stripes / noise','DIN D10 · SCLK D8 · DC D2'],
+    ['left','Left half only',`CS_S wire → ${B.map.CS_S}`],
+    ['right','Right half only',`CS_M wire → ${B.map.CS_M}`],
+    ['noise','Stripes / noise',`DIN ${B.map.DIN} · SCLK ${B.map.SCLK} · DC ${B.map.DC}`],
     ['none','No change','see message: power side, ribbons, or BUSY → D4'],
   ];
   const w=150,h=190,gap=30;
@@ -471,7 +589,19 @@ function drawTests(){
     lines.forEach((ln,j)=>el(svg,'text',{x:x+w/2,y:y+h+50+j*16,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},ln));
   });
 }
-function render(){ drawMain(); drawExtras(); drawBattery(); drawTests(); drawGpio(); tables(); }
+function applyBoard(){
+  B = BOARDS[boardKey];
+  document.body.dataset.board = boardKey;
+  document.querySelectorAll('.bn').forEach(e=>e.textContent=B.short);
+  document.querySelectorAll('.bfull').forEach(e=>e.textContent=B.full);
+  document.querySelectorAll('.bvcc').forEach(e=>e.textContent=B.map.VCC);
+  document.getElementById('ovBoard').textContent=B.short;
+  document.getElementById('ovChip').textContent=B.chip;
+  document.querySelectorAll('[data-pick]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.pick===boardKey)));
+}
+document.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ boardKey=b.dataset.pick;
+  try{ localStorage.setItem('board', boardKey); }catch(e){} render(); });
+function render(){ applyBoard(); drawMain(); drawExtras(); drawBattery(); drawBatteryFeather(); drawTests(); drawGpio(); tables(); }
 render();
 </script>
 </body></html>

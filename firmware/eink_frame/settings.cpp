@@ -1,5 +1,7 @@
 #include "settings.h"
 
+#include "pins.h"
+
 #include <Preferences.h>
 
 #if __has_include("config.h")
@@ -46,7 +48,11 @@ void defaults(Settings &s) {
   s.dns = IP_ARGS(STATIC_DNS);
 #endif
   s.setupApPassword = SETUP_AP_PASSWORD;
+#ifdef BATTERY_MONITOR_BUILTIN
+  s.hasBatteryDivider = true;  // the board has its own battery monitor
+#else
   s.hasBatteryDivider = HAS_BATTERY_DIVIDER;
+#endif
   s.cfgVersion = 0;
 }
 

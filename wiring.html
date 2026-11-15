@@ -241,6 +241,119 @@ body[data-board="xiao"] [data-board="feather"], body[data-board="feather"] [data
 </div>
 </section>
 
+<!-- ============ OPTIONAL: CAPACITOR ============ -->
+<section id="capacitor">
+<h2>Optional: steadier panel power with one capacitor</h2>
+<p>Photos with fine green, white or blue dots make the panel pull current in short, heavy bursts. If the board's small 3.3 V supply can't keep up, those colours collapse to yellow, red and black. A capacitor right at the HAT stores energy and covers the bursts. No soldering: its legs push into the socket on the HAT's underside.</p>
+
+<h3 style="font-size:16px;margin:12px 0 4px">Where it goes</h3>
+<svg viewBox="0 0 900 420" role="img" aria-label="Capacitor plugged into pins 1 and 6 of the HAT's 40-pin socket">
+  <!-- HAT underside (zoomed) -->
+  <rect x="20" y="40" width="470" height="365" rx="16" fill="var(--hat)"/>
+  <text x="255" y="30" text-anchor="middle" font-size="14" font-weight="700" fill="var(--text)">HAT underside, zoomed in on the pin-1 end of the socket</text>
+  <rect x="60" y="205" width="410" height="130" rx="6" fill="#1b1b1b"/>
+  <text x="462" y="197" text-anchor="end" font-size="11" fill="#cfe0ff">socket continues to pin 40 →</text>
+  <!-- capacitor standing up from the board -->
+  <rect x="170" y="60" width="70" height="90" rx="12" fill="#2f4c7a" stroke="#0e1b30"/>
+  <rect x="218" y="60" width="22" height="90" rx="6" fill="#c9d3e3"/>
+  <text x="229" y="86" text-anchor="middle" font-size="16" font-weight="700" fill="#2f4c7a">−</text>
+  <text x="229" y="112" text-anchor="middle" font-size="16" font-weight="700" fill="#2f4c7a">−</text>
+  <text x="229" y="138" text-anchor="middle" font-size="16" font-weight="700" fill="#2f4c7a">−</text>
+  <text x="194" y="102" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">1000µF</text>
+  <text x="194" y="118" text-anchor="middle" font-size="10" fill="#dfe6f2">10V</text>
+  <!-- legs: + to pin 1, − bent around pin 5 into pin 6 -->
+  <path d="M184 150 L111 225" stroke="#ff6b5e" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M228 150 L264 205 L264 262 L243 285" stroke="#e8e8e8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- pins 1..12: odd row top (y 240), even row bottom (y 300) -->
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <rect x="86" y="226" width="28" height="28" rx="3" fill="#d93025" stroke="#fff" stroke-width="2"/>
+    <text x="100" y="245" fill="#fff">1</text>
+    <circle cx="100" cy="300" r="14" fill="#555"/><text x="100" y="304" fill="#ddd">2</text>
+    <circle cx="165" cy="240" r="14" fill="#555"/><text x="165" y="244" fill="#ddd">3</text>
+    <circle cx="165" cy="300" r="14" fill="#555"/><text x="165" y="304" fill="#ddd">4</text>
+    <circle cx="230" cy="240" r="14" fill="#555"/><text x="230" y="244" fill="#ddd">5</text>
+    <circle cx="230" cy="300" r="15" fill="#1b1b1b" stroke="#fff" stroke-width="3"/><text x="230" y="304" fill="#fff">6</text>
+    <circle cx="295" cy="240" r="14" fill="#555"/><text x="295" y="244" fill="#ddd">7</text>
+    <circle cx="295" cy="300" r="14" fill="#555"/><text x="295" y="304" fill="#ddd">8</text>
+    <circle cx="360" cy="240" r="14" fill="#555"/><text x="360" y="244" fill="#ddd">9</text>
+    <circle cx="360" cy="300" r="14" fill="#555"/><text x="360" y="304" fill="#ddd">10</text>
+    <circle cx="425" cy="240" r="14" fill="#555"/><text x="425" y="244" fill="#ddd">11</text>
+    <circle cx="425" cy="300" r="14" fill="#555"/><text x="425" y="304" fill="#ddd">12</text>
+    <text x="100" y="328" font-size="11" fill="#ffd27a">5V</text>
+    <text x="165" y="328" font-size="11" fill="#ffd27a">5V</text>
+  </g>
+  <!-- labels -->
+  <g font-size="13" font-weight="700" fill="#fff">
+    <text x="34" y="96">+ long leg</text>
+    <text x="34" y="113" font-size="12" font-weight="400" fill="#ffd9d4">into pin 1 (3.3 V)</text>
+    <text x="34" y="130" font-size="11" font-weight="400" fill="#cfe0ff">square pad / "1"</text>
+    <text x="300" y="96">− short leg</text>
+    <text x="300" y="113" font-size="12" font-weight="400" fill="#e8e8e8">stripe side, bent around</text>
+    <text x="300" y="130" font-size="12" font-weight="400" fill="#e8e8e8">pin 5 into pin 6 (GND)</text>
+  </g>
+  <text x="34" y="365" font-size="12" fill="#ffd27a">Pins 2 and 4 carry 5 V on a Raspberry Pi: leave them empty.</text>
+  <text x="34" y="385" font-size="12" fill="#cfe0ff">Pin 6 = 3rd pin of the other row, counting from the pin-1 end.</text>
+
+  <!-- right: capacitor close-up -->
+  <text x="690" y="30" text-anchor="middle" font-size="14" font-weight="700" fill="var(--text)">The capacitor</text>
+  <rect x="620" y="55" width="110" height="150" rx="16" fill="#2f4c7a" stroke="var(--edge)"/>
+  <rect x="698" y="55" width="32" height="150" rx="8" fill="#c9d3e3"/>
+  <text x="714" y="95" text-anchor="middle" font-size="20" font-weight="700" fill="#2f4c7a">−</text>
+  <text x="714" y="135" text-anchor="middle" font-size="20" font-weight="700" fill="#2f4c7a">−</text>
+  <text x="714" y="175" text-anchor="middle" font-size="20" font-weight="700" fill="#2f4c7a">−</text>
+  <text x="658" y="125" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">1000µF</text>
+  <text x="658" y="145" text-anchor="middle" font-size="12" fill="#dfe6f2">10V</text>
+  <path d="M650 205 V330" stroke="#bbb" stroke-width="5"/>
+  <path d="M705 205 V285" stroke="#bbb" stroke-width="5"/>
+  <g font-size="13">
+    <text x="560" y="345" font-weight="700" fill="var(--text)">long leg = +</text>
+    <text x="560" y="362" fill="var(--muted)">→ pin 1 (3.3 V)</text>
+    <text x="720" y="300" font-weight="700" fill="var(--text)">short leg = −</text>
+    <text x="720" y="317" fill="var(--muted)">stripe side</text>
+    <text x="720" y="334" fill="var(--muted)">→ pin 6 (GND)</text>
+  </g>
+  <text x="690" y="395" text-anchor="middle" font-size="12" fill="var(--muted)">470–1000 µF electrolytic, rated 6.3 V or more</text>
+</svg>
+
+<h3 style="font-size:16px;margin:12px 0 4px">Why it helps</h3>
+<svg viewBox="0 0 900 230" role="img" aria-label="Power path from board regulator through jumper to HAT, with capacitor supplying bursts">
+  <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--muted)"/></marker></defs>
+  <rect x="20" y="60" width="180" height="90" rx="10" fill="var(--pcb)"/>
+  <text x="110" y="98" text-anchor="middle" font-size="14" font-weight="700" fill="var(--pcbtext)">Board's 3.3 V</text>
+  <text x="110" y="118" text-anchor="middle" font-size="12" fill="var(--pcbtext)">regulator (small)</text>
+  <path d="M200 90 H420" stroke="#d93025" stroke-width="5"/>
+  <path d="M200 125 H420" stroke="#1b1b1b" stroke-width="5"/>
+  <text x="310" y="78" text-anchor="middle" font-size="12" fill="var(--muted)">VCC jumper</text>
+  <text x="310" y="150" text-anchor="middle" font-size="12" fill="var(--muted)">GND jumper</text>
+  <rect x="420" y="40" width="220" height="130" rx="12" fill="var(--hat)"/>
+  <text x="530" y="70" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">HAT</text>
+  <!-- capacitor symbol across VCC/GND inside HAT -->
+  <path d="M470 90 V100" stroke="#fff" stroke-width="3"/>
+  <rect x="455" y="100" width="30" height="5" fill="#fff"/>
+  <path d="M455 112 q15 6 30 0" stroke="#fff" stroke-width="5" fill="none"/>
+  <path d="M470 115 V125" stroke="#fff" stroke-width="3"/>
+  <text x="495" y="112" font-size="12" fill="#ffd27a" font-weight="700">capacitor</text>
+  <text x="495" y="127" font-size="11" fill="#cfe0ff">(pins 1 &amp; 6)</text>
+  <path d="M640 105 H700" stroke="var(--muted)" stroke-width="3" marker-end="url(#arr)"/>
+  <rect x="700" y="60" width="180" height="90" rx="10" fill="var(--shield)" opacity=".7"/>
+  <text x="790" y="98" text-anchor="middle" font-size="14" font-weight="700" fill="var(--text)">Panel refresh</text>
+  <text x="790" y="118" text-anchor="middle" font-size="12" fill="var(--text)">short heavy bursts</text>
+  <g font-size="12" fill="var(--text)">
+    <text x="20" y="195"><tspan font-weight="700">Without it:</tspan> each burst has to come through the small regulator and the jumper, the voltage dips, and fine green/white/blue dots fail.</text>
+    <text x="20" y="215"><tspan font-weight="700">With it:</tspan> the capacitor hands out the burst instantly and refills between bursts, so the voltage at the panel stays steady.</text>
+  </g>
+</svg>
+
+<ol class="small">
+<li><b>Unplug USB</b> (and any battery) first.</li>
+<li>Find <b>pin 1</b> on the HAT's underside socket: the end with a square pad or a printed "1". Pin 6 is the <b>third</b> pin along the <b>other</b> row from that end.</li>
+<li>Bend the legs so they reach: <b>long leg (+) into pin 1</b>, <b>short leg / stripe side (−) into pin 6</b>. Push them in firmly; they should hold by themselves. Leave pins 2 and 4 empty.</li>
+<li>Check twice that the stripe faces pin 6. A reversed electrolytic capacitor can bulge or pop.</li>
+<li>Plug USB back in and show a green-heavy photo. Optional extra: a 10 µF ceramic capacitor (either way round) in pins 17 (3.3 V) and 20 (GND) helps a little more.</li>
+</ol>
+<p class="small">Pins 1 and 6 are the same 3.3 V and GND the 10-pin cable's VCC and GND reach, so the capacitor sits right at the panel. If photos are still wrong with it, go for a separate 3.3 V regulator for the HAT instead.</p>
+</section>
+
 <!-- ============ DEBUG ============ -->
 <section id="debug">
 <h2>When the picture won't change</h2>

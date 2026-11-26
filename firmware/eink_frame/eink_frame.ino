@@ -20,6 +20,7 @@
 #include <stdarg.h>
 #include <driver/gpio.h>
 #include <esp_heap_caps.h>
+#include <esp_idf_version.h>
 #include <esp_sleep.h>
 
 #include "epd13in3e.h"
@@ -81,13 +82,20 @@ const char *resetReason() {
 }
 
 const char *wakeReason() {
-  switch (esp_sleep_get_wakeup_cause()) {
-    case ESP_SLEEP_WAKEUP_EXT0: return "button";
-    case ESP_SLEEP_WAKEUP_EXT1:
-      return (esp_sleep_get_ext1_wakeup_status() & (1ULL << PIN_BUTTON)) ? "button" : "config";
-    case ESP_SLEEP_WAKEUP_TIMER: return "timer";
-    default: return "boot";
+#if ESP_IDF_VERSION_MAJOR >= 6
+  // Board package 4.x (ESP-IDF 6) reports wake causes as a bitmap.
+  uint32_t causes = esp_sleep_get_wakeup_causes();
+  auto woke = [&](esp_sleep_wakeup_cause_t c) { return (causes & (1UL << c)) != 0; };
+#else
+  esp_sleep_wakeup_cause_t cause = esp_sleep_get_wakeup_cause();
+  auto woke = [&](esp_sleep_wakeup_cause_t c) { return cause == c; };
+#endif
+  if (woke(ESP_SLEEP_WAKEUP_EXT0)) return "button";
+  if (woke(ESP_SLEEP_WAKEUP_EXT1)) {
+    return (esp_sleep_get_ext1_wakeup_status() & (1ULL << PIN_BUTTON)) ? "button" : "config";
   }
+  if (woke(ESP_SLEEP_WAKEUP_TIMER)) return "timer";
+  return "boot";
 }
 
 // Extra query parameters telling the add-on how remote updates went.

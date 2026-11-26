@@ -26,6 +26,14 @@ DNSServer dns;
 Settings *cfg = nullptr;
 String apSsid;
 
+// Panel jobs run after the page has had its answer: a refresh takes ~25 s,
+// and holding the request open that long made phones drop it ("Failed to
+// fetch"). The page polls /api/status for the result.
+enum class Job { None, Test, Clear, Fetch, Display };
+Job pendingJob = Job::None;
+bool jobRunning = false;
+String jobResult;  // last outcome, shown on the page
+
 uint8_t *uploadBuf = nullptr;
 size_t uploadLen = 0;
 bool uploadOverflow = false;
@@ -100,6 +108,8 @@ void handleStatus() {
   addField(j, "mask", s.subnet);
   addField(j, "dns", s.dns);
   addField(j, "divider", s.hasBatteryDivider ? "true" : "false", false);
+  addField(j, "panel_busy", (pendingJob != Job::None || jobRunning) ? "true" : "false", false);
+  addField(j, "panel_result", jobResult);
   j += '}';
   server.send(200, "application/json", j);
 }
@@ -171,17 +181,25 @@ void handleDisplayUpload() {
   }
 }
 
+bool queueJob(Job job, const char *what) {
+  if (pendingJob != Job::None || jobRunning) {
+    server.send(409, "text/plain", "The panel is still busy with the last request. Wait for it to finish.");
+    return false;
+  }
+  pendingJob = job;
+  jobResult = "";
+  server.send(202, "text/plain", String(what) + " The panel takes about 25 s; the result appears here.");
+  return true;
+}
+
 void handleDisplayDone() {
   if (!uploadBuf) {
     server.send(500, "text/plain", "Out of memory - is PSRAM enabled?");
   } else if (uploadOverflow || uploadLen != EPD_FRAME_BYTES) {
     server.send(400, "text/plain", "The file must be exactly 960,000 bytes (a .bin from the add-on).");
-  } else {
-    bool ok = showFrame(uploadBuf);
-    if (ok) net::clearCurrentId();  // the server will replace it at the next check-in
-    server.send(ok ? 200 : 500, "text/plain", panelResult(ok, "Done - the picture is on the panel."));
-  }
-  if (uploadBuf) {
+    heap_caps_free(uploadBuf);
+    uploadBuf = nullptr;
+  } else if (!queueJob(Job::Display, "Picture received.")) {
     heap_caps_free(uploadBuf);
     uploadBuf = nullptr;
   }
@@ -192,36 +210,55 @@ void handleFetch() {
     server.send(503, "text/plain", "Not connected to the home Wi-Fi, so the server can't be reached.");
     return;
   }
-  FetchResult r = net::fetchNext(*cfg, "button", power::batteryMv(*cfg));
-  if (r.status == 200 && r.frame) {
-    bool ok = showFrame(r.frame);
-    heap_caps_free(r.frame);
-    if (ok) net::setCurrentId(r.imageId);
-    server.send(ok ? 200 : 500, "text/plain", panelResult(ok, "Done - showing the next picture."));
-  } else if (r.status == 304) {
-    server.send(200, "text/plain", "The server says to keep the current picture.");
-  } else if (r.status == 401) {
-    server.send(502, "text/plain", "The server rejected the frame token.");
+  queueJob(Job::Fetch, "Getting the next picture.");
+}
+
+void handleClear() { queueJob(Job::Clear, "Clearing to white."); }
+
+void handleTest() { queueJob(Job::Test, "Drawing colour bands."); }
+
+// Runs in the portal loop, after the request that started it has been answered.
+void runJob(Job job) {
+  jobRunning = true;
+  // Wi-Fi stays on for the page, so lower its transmit power while the panel
+  // draws its refresh current, to keep the supply from dipping.
+  wifi_power_t txPower = WiFi.getTxPower();
+  WiFi.setTxPower(WIFI_POWER_8_5dBm);
+  bool ok = false;
+  String done;
+  if (job == Job::Fetch) {
+    FetchResult r = net::fetchNext(*cfg, "button", power::batteryMv(*cfg));
+    if (r.status == 200 && r.frame) {
+      ok = showFrame(r.frame);
+      heap_caps_free(r.frame);
+      if (ok) net::setCurrentId(r.imageId);
+      jobResult = panelResult(ok, "Done - showing the next picture.");
+    } else if (r.status == 304) {
+      jobResult = "The server says to keep the current picture.";
+    } else if (r.status == 401) {
+      jobResult = "The server rejected the frame token.";
+    } else {
+      jobResult = "Could not get a picture from the server (status " + String(r.status) + ").";
+    }
   } else {
-    server.send(502, "text/plain", "Could not get a picture from the server (status " + String(r.status) + ").");
+    if (job == Job::Display) {
+      ok = showFrame(uploadBuf);
+      heap_caps_free(uploadBuf);
+      uploadBuf = nullptr;
+      done = "Done - the picture is on the panel.";
+    } else {
+      epd::begin();
+      ok = epd::init() && (job == Job::Test ? epd::testPattern() : epd::clear(0x1));
+      epd::sleep();
+      done = job == Job::Test ? "Colour bands drawn. Both halves should show black, white, yellow, red, blue, green"
+                              : "Cleared to white.";
+    }
+    if (ok) net::clearCurrentId();  // the server will replace it at the next check-in
+    jobResult = panelResult(ok, done.c_str());
   }
-}
-
-void handleClear() {
-  epd::begin();
-  bool ok = epd::init() && epd::clear(0x1);
-  epd::sleep();
-  if (ok) net::clearCurrentId();
-  server.send(ok ? 200 : 500, "text/plain", panelResult(ok, "Cleared to white."));
-}
-
-void handleTest() {
-  epd::begin();
-  bool ok = epd::init() && epd::testPattern();
-  epd::sleep();
-  if (ok) net::clearCurrentId();
-  server.send(ok ? 200 : 500, "text/plain",
-              panelResult(ok, "Colour bands sent. Both halves should show black, white, yellow, red, blue, green"));
+  WiFi.setTxPower(txPower);
+  Serial.printf("[portal] %s\n", jobResult.c_str());
+  jobRunning = false;
 }
 
 void handleReboot() {
@@ -309,6 +346,12 @@ Exit run(Settings &s, bool byButton) {
   while (true) {
     dns.processNextRequest();
     server.handleClient();
+    if (pendingJob != Job::None) {
+      Job job = pendingJob;
+      pendingJob = Job::None;
+      delay(50);  // let the 202 reply finish sending
+      runJob(job);
+    }
     delay(2);
 
     if (millis() - lastPoll >= kSwitchPollMs) {

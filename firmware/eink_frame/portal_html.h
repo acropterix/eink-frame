@@ -108,10 +108,11 @@ $('#pic').onsubmit=async e=>{e.preventDefault();const f=$('#bin').files[0];
   if(f.size!==960000){$('#picmsg').textContent=`That file is ${f.size} bytes; it must be 960,000.`;return;}
   const fd=new FormData();fd.append('frame',f,'frame.bin');
   $('#picmsg').textContent='Uploading… the panel takes about 20 s to refresh.';
-  await post('/api/display',fd,$('#picmsg'));status();};
+  if(await post('/api/display',fd,$('#picmsg')))waitPanel();};
 document.querySelectorAll('[data-act]').forEach(b=>b.onclick=async()=>{
   if(b.dataset.act==='reboot'&&!confirm('Restart the frame?'))return;
-  await post('/api/'+b.dataset.act,null,$('#picmsg'));status();});
+  const ok=await post('/api/'+b.dataset.act,null,$('#picmsg'));
+  if(ok&&b.dataset.act!=='reboot')waitPanel();});
 $('#settings').onsubmit=async e=>{e.preventDefault();
   const fd=new URLSearchParams(new FormData(e.target));
   fd.set('static',e.target.static.checked?'1':'0');fd.set('divider',e.target.divider.checked?'1':'0');
@@ -120,5 +121,16 @@ $('#fw').onsubmit=async e=>{e.preventDefault();const f=$('#fwfile').files[0];
   if(!f){$('#fwmsg').textContent='Choose a firmware .bin first.';return;}
   if(!confirm('Update the firmware? The frame restarts afterwards.'))return;
   const fd=new FormData();fd.append('firmware',f,f.name);await post('/api/firmware',fd,$('#fwmsg'));};
+// Panel actions answer at once; poll until the refresh has finished.
+async function waitPanel(){
+  const start=Date.now();
+  while(Date.now()-start<120000){
+    await new Promise(r=>setTimeout(r,2000));
+    try{const s=await (await fetch('/api/status')).json();
+      if(!s.panel_busy){if(s.panel_result)$('#picmsg').textContent=s.panel_result;status();return;}
+      $('#picmsg').textContent='Panel refreshing… '+Math.round((Date.now()-start)/1000)+' s';
+    }catch(e){$('#picmsg').textContent='Lost contact with the frame while it refreshed. If it restarted, check the Serial Monitor for "reset: BROWN-OUT".';}
+  }
+}
 loadSettings();setInterval(status,15000);
 </script></body></html>)HTML";

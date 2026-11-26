@@ -8,3 +8,6 @@ firmware/eink_frame/config.h
 __pycache__/
 *.pyc
 .DS_Store
+
+# Arduino IDE "Export Compiled Binary" output
+firmware/**/build/

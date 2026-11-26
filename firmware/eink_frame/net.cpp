@@ -2,7 +2,7 @@
 
 #include <HTTPClient.h>
 #include <MD5Builder.h>
-#include <HTTPUpdate.h>
+#include <Update.h>
 #include <WiFi.h>
 #include <esp_heap_caps.h>
 
@@ -106,7 +106,7 @@ using net::urlEncode;
 
 String commonQuery(const Settings &s, uint16_t batteryMv) {
   return String("token=") + urlEncode(s.frameToken) + "&battery_mv=" + batteryMv + "&rssi=" + WiFi.RSSI() +
-         "&fw=" + FW_VERSION + "&ip=" + WiFi.localIP().toString();
+         "&fw=" + FW_VERSION + "&chip=" + String(CONFIG_IDF_FIRMWARE_CHIP_ID) + "&ip=" + WiFi.localIP().toString();
 }
 
 }  // namespace
@@ -273,15 +273,65 @@ bool fetchConfig(const Settings &s, Settings &out) {
   return gotVersion && out.serverPort > 0;
 }
 
-void updateFirmware(const Settings &s, String &error) {
+bool updateFirmware(const Settings &s, String &error) {
+  // Our own download instead of HTTPUpdate: that library rejects the file
+  // ("Verify Bin Header Failed") if the first byte hasn't arrived yet when it
+  // peeks, which happens with a 1 MB file from a Raspberry Pi.
   WiFiClient client;
+  HTTPClient http;
+  http.setConnectTimeout(5000);
+  http.setTimeout(20000);
+  const char *headers[] = {"x-MD5"};
+  http.collectHeaders(headers, 1);
   String url = baseUrl(s) + "/frame/firmware?token=" + urlEncode(s.frameToken);
   Serial.println("[ota] downloading firmware from the server");
-  httpUpdate.rebootOnUpdate(true);
-  t_httpUpdate_return ret = httpUpdate.update(client, url);
-  // Only reached on failure: success reboots into the new firmware.
-  error = ret == HTTP_UPDATE_NO_UPDATES ? String("server had no update") : httpUpdate.getLastErrorString();
-  Serial.printf("[ota] failed: %s\n", error.c_str());
+  auto fail = [&](bool transient, const String &why) {
+    error = why;
+    Serial.printf("[ota] failed (%s): %s\n", transient ? "will retry" : "won't retry this file", why.c_str());
+    if (Update.isRunning()) Update.abort();
+    http.end();
+    return transient;
+  };
+  if (!http.begin(client, url)) return fail(true, "could not reach the server");
+  int code = http.GET();
+  if (code != HTTP_CODE_OK) return fail(true, "server answered " + String(code));
+  int len = http.getSize();
+  if (len <= 0) return fail(true, "server sent no length");
+  WiFiClient *stream = http.getStreamPtr();
+
+  // Read the image header ourselves, waiting for it to arrive.
+  uint8_t head[16];
+  size_t got = 0;
+  uint32_t until = millis() + 10000;
+  while (got < sizeof(head) && millis() < until) {
+    if (stream->available()) got += stream->readBytes(head + got, sizeof(head) - got);
+    else delay(5);
+  }
+  if (got < sizeof(head)) return fail(true, "no data arrived from the server");
+  if (head[0] != 0xE9) return fail(false, "not an ESP32 firmware file (starts with 0x" + String(head[0], HEX) + ")");
+  uint16_t chip = head[12] | (head[13] << 8);
+  if (chip != CONFIG_IDF_FIRMWARE_CHIP_ID) {
+    auto name = [](uint16_t c) { return c == 0 ? "ESP32 (Feather)" : c == 9 ? "ESP32-S3 (XIAO)" : "another chip"; };
+    return fail(false, String("built for ") + name(chip) + " but this board is " + name(CONFIG_IDF_FIRMWARE_CHIP_ID) +
+                           ": export it with the right board selected");
+  }
+
+  if (!Update.begin(len, U_FLASH)) return fail(false, String("can't start update: ") + Update.errorString());
+  String md5 = http.header("x-MD5");
+  if (md5.length() == 32) Update.setMD5(md5.c_str());
+  if (Update.write(head, sizeof(head)) != sizeof(head)) return fail(true, String("write failed: ") + Update.errorString());
+  size_t written = sizeof(head) + Update.writeStream(*stream);
+  if (written != (size_t)len) return fail(true, "download stopped at " + String(written) + " of " + String(len) + " bytes");
+  if (!Update.end()) {
+    String why = Update.errorString();
+    return fail(why.indexOf("MD5") >= 0, "install check failed: " + why);  // MD5 mismatch = bad download, retry
+  }
+  http.end();
+  Serial.println("[ota] firmware installed and verified, restarting");
+  Serial.flush();
+  delay(200);
+  ESP.restart();
+  return false;  // not reached
 }
 
 void forgetAp() { rtcApCached = false; }

@@ -353,13 +353,26 @@ def firmware_meta(db):
     return meta if meta and FIRMWARE_PATH.exists() else None
 
 
+CHIP_NAMES = {0: "ESP32 (Feather)", 9: "ESP32-S3 (XIAO)"}
+
+
+def firmware_chip(data):
+    """Chip ID from an ESP firmware image header (bytes 12-13), or None."""
+    return data[12] | (data[13] << 8) if len(data) >= 16 else None
+
+
+def firmware_fits_frame(meta, state):
+    """False only when both chips are known and differ (wrong board's build)."""
+    return meta.get("chip") is None or state.get("chip") is None or meta["chip"] == state["chip"]
+
+
 def update_headers(db):
     headers = {}
     version = frame_config(db)["version"]
     if version:
         headers["X-Config-Version"] = str(version)
     meta = firmware_meta(db)
-    if meta:
+    if meta and firmware_fits_frame(meta, db["state"]):
         headers["X-Firmware-Version"] = meta["version"]
     return headers
 
@@ -383,6 +396,8 @@ def record_frame_report(state, query):
             state["frame_error_iso"] = local_now().isoformat(timespec="seconds")
             log.warning("Frame reported a problem: %s", error)
         state["frame_error"] = error
+    if query.get("chip", "").isdigit():
+        state["chip"] = int(query["chip"])
     if query.get("busy_blips"):
         try:
             state["busy_blips"] = int(query["busy_blips"])
@@ -796,7 +811,7 @@ async def get_frame_settings(request):
         "version": cfg["version"],
         "changes": [public_change(e, state) for e in reversed(cfg["changes"][-20:])],
         "frame": {k: state.get(k) for k in (
-            "cfg_applied", "cfg_failed", "cfg_error", "fw", "fw_failed", "fw_error", "last_seen_iso")},
+            "cfg_applied", "cfg_failed", "cfg_error", "fw", "fw_failed", "fw_error", "last_seen_iso", "chip")},
         "firmware": firmware_meta(db),
     })
 
@@ -838,13 +853,15 @@ async def upload_firmware(request):
     tmp = FIRMWARE_PATH.with_suffix(".tmp")
     tmp.write_bytes(data)
     tmp.replace(FIRMWARE_PATH)
+    chip = firmware_chip(data)
     meta = {"version": version, "size": len(data), "md5": hashlib.md5(data).hexdigest(),
+            "chip": chip, "board": CHIP_NAMES.get(chip, f"chip {chip}"),
             "uploaded_iso": local_now().isoformat(timespec="seconds")}
     async with db_lock:
         db = load_db()
         db["firmware"] = meta
         save_db(db)
-    log.info("Firmware %s uploaded (%d bytes)", version, len(data))
+    log.info("Firmware %s for %s uploaded (%d bytes)", version, meta["board"], len(data))
     return web.json_response(meta)
 
 

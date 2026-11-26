@@ -209,7 +209,10 @@ async function refreshFrameSettings() {
   if (fw) {
     fwText += fw.version === f.fw
       ? ` Uploaded firmware ${fw.version} is installed.`
-      : ` Firmware ${fw.version} (${Math.round(fw.size / 1024)} KB) is waiting to be installed at the next check-in.`;
+      : ` Firmware ${fw.version} for ${fw.board || "unknown board"} (${Math.round(fw.size / 1024)} KB) is waiting to be installed at the next check-in.`;
+    if (fw.chip != null && f.chip != null && fw.chip !== f.chip) {
+      fwText += ` ⚠️ But this file was built for ${fw.board} and the frame is a different board, so it won't be offered. Export it again with the frame's board selected in Arduino IDE.`;
+    }
   }
   if (f.fw_failed && fw && f.fw_failed === fw.version) {
     fwText += ` Installing ${f.fw_failed} failed: ${f.fw_error || "unknown error"}. Upload a fixed build to try again.`;

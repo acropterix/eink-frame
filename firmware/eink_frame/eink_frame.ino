@@ -226,10 +226,13 @@ void setup() {
         r.frame = nullptr;
       }
       String error;
-      net::updateFirmware(s, error);
-      rs.failedFirmware = r.firmwareVersion;
-      rs.firmwareError = error;
-      settings::saveRemote(rs);
+      if (net::updateFirmware(s, error)) {
+        noteError("firmware %s download problem, will retry next wake: %s", r.firmwareVersion.c_str(), error.c_str());
+      } else {  // the file itself is unusable: don't try this version again
+        rs.failedFirmware = r.firmwareVersion;
+        rs.firmwareError = error;
+        settings::saveRemote(rs);
+      }
     }
   }
 

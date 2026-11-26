@@ -29,8 +29,9 @@ FetchResult fetchNext(const Settings &s, const char *reason, uint16_t batteryMv,
 // to `out` (a copy of s). Returns false if nothing could be fetched.
 bool fetchConfig(const Settings &s, Settings &out);
 // Download and install firmware from the add-on. Only returns on failure
-// (success reboots), with `error` set.
-void updateFirmware(const Settings &s, String &error);
+// (success reboots), with `error` set; returns true if it was a transient
+// problem (network) worth retrying, false if the file itself is unusable.
+bool updateFirmware(const Settings &s, String &error);
 // Forget the cached access point (after Wi-Fi settings change).
 void forgetAp();
 String urlEncode(const String &in);

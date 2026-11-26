@@ -61,6 +61,10 @@ Plug USB-C into the Mac, open **Tools → Serial Monitor** (115200), press **R**
 | No `[wifi]` line / `could not join Wi-Fi` | Wi-Fi name/password, or the 5 GHz-only network | Config mode → settings |
 | `[http] status -1` | Server address/port wrong, or the add-on stopped | Check `192.168.2.10:8200` and that the add-on is running |
 | `[http] status 401` | Token mismatch | Same token in add-on and frame |
+| `picture checksum OK: identical to the server's file` | The frame received every byte exactly as the add-on sent it | — |
+| `picture corrupted in download (checksum mismatch)` | Bytes changed on the way (Wi-Fi/memory) | Retries automatically; tell me if it repeats |
+| `BUSY blipped high for N ms … (ignored)` | The panel's BUSY flickered mid-refresh; the firmware now waits it out | Informational. Many blips = check the BUSY wire |
+| `refresh took … ms` well under ~19000 | Refresh may be cut short | Check for blips above; send me the log |
 | `[http] status 304` | Server says keep current picture | Step 0 |
 | `BUSY wire looks disconnected` | Nothing is driving BUSY | HAT `BUSY` → **D4**: housing fully on, right pin, wire intact |
 | `BUSY wire isn't connected: nothing drives it` | Same, caught before the refresh | HAT `BUSY` → **D4** (left side, 5th pin). Beep D4 ↔ 40-pin socket pin 18 |

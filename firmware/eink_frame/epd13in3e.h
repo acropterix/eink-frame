@@ -30,5 +30,7 @@ void sleep();
 const char *lastError();
 // How long the last full refresh took. A real one takes about 19 s.
 uint32_t lastRefreshMs();
+// How many brief BUSY highs were ignored during the last refresh.
+uint16_t lastBusyBlips();
 
 }  // namespace epd

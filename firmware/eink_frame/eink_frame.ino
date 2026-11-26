@@ -41,6 +41,7 @@ RTC_DATA_ATTR uint8_t rtcFailures = 0;
 // Home Assistant can show it (the panel itself just keeps the old picture).
 RTC_DATA_ATTR char rtcError[208] = "";
 RTC_DATA_ATTR uint32_t rtcRefreshMs = 0;
+RTC_DATA_ATTR uint16_t rtcBusyBlips = 0;
 
 void noteError(const char *fmt, ...) {
   va_list args;
@@ -97,7 +98,7 @@ String updateReport(const RemoteState &rs) {
     q += "&fw_fail=" + net::urlEncode(rs.failedFirmware) + "&fw_err=" + net::urlEncode(rs.firmwareError);
   }
   if (rtcError[0]) q += "&err=" + net::urlEncode(rtcError);
-  if (rtcRefreshMs) q += "&refresh_ms=" + String(rtcRefreshMs);
+  if (rtcRefreshMs) q += "&refresh_ms=" + String(rtcRefreshMs) + "&busy_blips=" + String(rtcBusyBlips);
   return q;
 }
 
@@ -236,6 +237,16 @@ void setup() {
   WiFi.mode(WIFI_OFF);
 
   if (r.status == 200 && r.frame) {
+    // Prove the bytes about to go to the panel are still exactly the server's file.
+    if (r.frameMd5.length()) {
+      bool same = net::frameMd5(r.frame) == r.frameMd5;
+      Serial.printf("[epd] picture in memory %s the server's file\n", same ? "matches" : "NO LONGER matches");
+      if (!same) {
+        heap_caps_free(r.frame);
+        noteError("picture changed in memory before display (PSRAM?)");
+        failAndSleep();
+      }
+    }
     epd::begin();
     bool ok = epd::init() && epd::display(r.frame);
     epd::sleep();
@@ -245,11 +256,15 @@ void setup() {
       failAndSleep();
     }
     rtcRefreshMs = epd::lastRefreshMs();
+    rtcBusyBlips = epd::lastBusyBlips();
     net::setCurrentId(r.imageId);
     Serial.println("[epd] refreshed");
   } else if (r.status == 401) {
     Serial.println("[http] token rejected - check the frame token");
     power::sleepFor(kDefaultSleepS);
+  } else if (r.status == -5) {
+    noteError("picture corrupted in download (checksum mismatch)");
+    failAndSleep();
   } else if (!serverOk) {
     noteError("server %s:%u answered %d", s.serverHost.c_str(), s.serverPort, r.status);
     failAndSleep();

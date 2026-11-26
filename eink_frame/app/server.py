@@ -383,6 +383,11 @@ def record_frame_report(state, query):
             state["frame_error_iso"] = local_now().isoformat(timespec="seconds")
             log.warning("Frame reported a problem: %s", error)
         state["frame_error"] = error
+    if query.get("busy_blips"):
+        try:
+            state["busy_blips"] = int(query["busy_blips"])
+        except ValueError:
+            pass
     if query.get("refresh_ms"):
         try:
             state["refresh_s"] = round(int(query["refresh_ms"]) / 1000, 1)
@@ -411,7 +416,8 @@ async def push_states(app, state, image_name):
             {"friendly_name": "E-Ink Frame status",
              "icon": "mdi:alert-circle" if state.get("frame_error") else "mdi:check-circle",
              "last_problem": state.get("frame_error"), "problem_since": state.get("frame_error_iso"),
-             "last_refresh_seconds": state.get("refresh_s"), "last_wake_reason": state.get("last_reason")}),
+             "last_refresh_seconds": state.get("refresh_s"), "last_wake_reason": state.get("last_reason"),
+             "busy_blips_ignored": state.get("busy_blips")}),
         "sensor.eink_frame_image": (
             image_name or "unknown",
             {"friendly_name": "E-Ink Frame image", "icon": "mdi:image-frame",
@@ -577,6 +583,7 @@ async def frame_next(request):
 
     data = image_path(chosen, "bin").read_bytes()
     headers["X-Image-Id"] = chosen
+    headers["X-Frame-MD5"] = hashlib.md5(data).hexdigest()  # lets the frame prove it got every byte
     log.info("Frame check-in (%s): sending %s, sleep %ss", reason, names.get(chosen), sleep)
     return web.Response(body=data, content_type="application/octet-stream", headers=headers)
 

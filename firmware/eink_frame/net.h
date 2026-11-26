@@ -12,6 +12,7 @@ struct FetchResult {
   uint8_t *frame = nullptr;  // PSRAM buffer when status == 200; caller frees
   uint32_t configVersion = 0;  // newest settings version on the server
   String firmwareVersion;      // firmware version offered by the server ("" = none)
+  String frameMd5;             // checksum of the picture as the server sent it ("" = older add-on)
 };
 
 namespace net {
@@ -19,6 +20,8 @@ namespace net {
 // Join Wi-Fi: the access point used last time first, then the main network,
 // then the backup network. Keeps the current WiFi mode (STA or AP+STA).
 bool connect(const Settings &s);
+// MD5 of a downloaded frame buffer, as lowercase hex.
+String frameMd5(const uint8_t *frame);
 // Ask the add-on for the next picture. `report` is appended to the query
 // (settings/firmware update results).
 FetchResult fetchNext(const Settings &s, const char *reason, uint16_t batteryMv, const String &report = "");

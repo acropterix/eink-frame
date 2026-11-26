@@ -1,6 +1,7 @@
 #include "net.h"
 
 #include <HTTPClient.h>
+#include <MD5Builder.h>
 #include <HTTPUpdate.h>
 #include <WiFi.h>
 #include <esp_heap_caps.h>
@@ -73,6 +74,14 @@ String urlDecode(const String &in) {
 }  // namespace
 
 namespace net {
+
+String frameMd5(const uint8_t *frame) {
+  MD5Builder md5;
+  md5.begin();
+  md5.add(frame, EPD_FRAME_BYTES);
+  md5.calculate();
+  return md5.toString();
+}
 
 String urlEncode(const String &in) {
   String out;
@@ -148,8 +157,8 @@ FetchResult fetchNext(const Settings &s, const char *reason, uint16_t batteryMv,
   HTTPClient http;
   http.setConnectTimeout(5000);
   http.setTimeout(15000);
-  const char *headers[] = {"X-Sleep-Seconds", "X-Image-Id", "X-Config-Version", "X-Firmware-Version"};
-  http.collectHeaders(headers, 4);
+  const char *headers[] = {"X-Sleep-Seconds", "X-Image-Id", "X-Config-Version", "X-Firmware-Version", "X-Frame-MD5"};
+  http.collectHeaders(headers, 5);
   if (!http.begin(client, url)) {
     result.status = -1;
     return result;
@@ -159,6 +168,7 @@ FetchResult fetchNext(const Settings &s, const char *reason, uint16_t batteryMv,
   result.imageId = http.header("X-Image-Id");
   result.configVersion = http.header("X-Config-Version").toInt();
   result.firmwareVersion = http.header("X-Firmware-Version");
+  result.frameMd5 = http.header("X-Frame-MD5");
   Serial.printf("[http] status %d, sleep %lu s, image '%s'\n", result.status,
                 (unsigned long)result.sleepS, result.imageId.c_str());
 
@@ -184,7 +194,12 @@ FetchResult fetchNext(const Settings &s, const char *reason, uint16_t batteryMv,
           delay(2);
         }
       }
-      if (got == EPD_FRAME_BYTES) {
+      if (got == EPD_FRAME_BYTES && result.frameMd5.length() && frameMd5(frame) != result.frameMd5) {
+        Serial.println("[http] picture corrupted in download (checksum mismatch)");
+        heap_caps_free(frame);
+        result.status = -5;
+      } else if (got == EPD_FRAME_BYTES) {
+        if (result.frameMd5.length()) Serial.println("[http] picture checksum OK: identical to the server's file");
         result.frame = frame;
       } else {
         Serial.printf("[http] download stalled at %u bytes\n", (unsigned)got);

@@ -30,6 +30,9 @@ constexpr uint32_t kBusyTimeoutMs = 60000;
 // A real refresh takes ~19 s. Finishing much faster means BUSY isn't really
 // connected (or is stuck high), so the panel most likely didn't change.
 constexpr uint32_t kMinRefreshMs = 3000;
+// BUSY must stay high this long before the panel counts as idle.
+constexpr uint32_t kIdleStableMs = 200;
+uint16_t busyBlips = 0;  // brief BUSY highs ignored during the last refresh
 
 char errorText[192] = "";
 uint32_t refreshMs = 0;
@@ -114,16 +117,31 @@ bool busyFloating() {
 }
 
 // BUSY is LOW while the controller works and HIGH when idle.
-bool waitIdle(const char *stage) {
-  uint32_t start = millis();
-  uint32_t lastNote = start;
-  while (digitalRead(PIN_EPD_BUSY) == LOW) {
-    if (millis() - lastNote >= 10000) {
-      lastNote = millis();
-      Serial.printf("[epd] still waiting for BUSY at %s (%lu s of 60)\n", stage,
-                    (unsigned long)((lastNote - start) / 1000));
+bool waitIdle(const char *stage, uint32_t timeoutMs = kBusyTimeoutMs) {
+  // The panel is idle only once BUSY has stayed HIGH for kIdleStableMs. A
+  // single high reading isn't enough: a brief blip mid-refresh used to end the
+  // wait early, and the power-off that follows cut the refresh short (fine
+  // green/white/blue dots never finished forming).
+  uint32_t start = millis(), lastNote = start, highSince = 0;
+  uint16_t blips = 0;
+  while (true) {
+    uint32_t now = millis();
+    if (digitalRead(PIN_EPD_BUSY) == HIGH) {
+      if (!highSince) highSince = now;
+      if (now - highSince >= kIdleStableMs) break;
+    } else if (highSince) {
+      blips++;
+      Serial.printf("[epd] BUSY blipped high for %lu ms at %lu ms into %s (ignored)\n",
+                    (unsigned long)(now - highSince), (unsigned long)(highSince - start), stage);
+      highSince = 0;
     }
-    if (millis() - start > kBusyTimeoutMs) {
+    if (now - lastNote >= 10000) {
+      lastNote = now;
+      Serial.printf("[epd] still waiting for BUSY at %s (%lu s of 60)\n", stage,
+                    (unsigned long)((now - start) / 1000));
+    }
+    if (now - start > timeoutMs) {
+      if (timeoutMs != kBusyTimeoutMs) return false;  // short, optional wait: give up quietly
       if (busyFloating()) {
         fail("BUSY wire looks disconnected at %s (HAT BUSY -> " LBL_BUSY ")", stage);
       } else {
@@ -132,8 +150,9 @@ bool waitIdle(const char *stage) {
       }
       return false;
     }
-    delay(10);
+    delay(2);
   }
+  busyBlips += blips;
   return true;
 }
 
@@ -153,12 +172,15 @@ bool refresh() {
   if (!waitIdle("power on")) return false;
   delay(50);
   uint32_t start = millis();
+  busyBlips = 0;
   send(BOTH, DRF, DRF_V, sizeof(DRF_V));
   if (!waitIdle("refresh")) return false;
-  refreshMs = millis() - start;
+  refreshMs = millis() - start - kIdleStableMs;
   delay(50);
   send(BOTH, POF, POF_V, sizeof(POF_V));
-  Serial.printf("[epd] refresh took %lu ms\n", (unsigned long)refreshMs);
+  waitIdle("power off", 3000);  // let the panel finish powering down before sleep / cutting power
+  Serial.printf("[epd] refresh took %lu ms (%u BUSY blips ignored)\n", (unsigned long)refreshMs,
+                (unsigned)busyBlips);
   if (refreshMs < kMinRefreshMs) {
     fail("panel never went busy (refresh %lu ms): it isn't getting commands. Check DIN->" LBL_MOSI
          ", SCLK->" LBL_SCK ", CS_M->" LBL_CS_M ", CS_S->" LBL_CS_S ", DC->" LBL_DC " and the ribbon latches",
@@ -174,6 +196,7 @@ namespace epd {
 
 const char *lastError() { return errorText; }
 uint32_t lastRefreshMs() { return refreshMs; }
+uint16_t lastBusyBlips() { return busyBlips; }
 
 void begin() {
   errorText[0] = '\0';
